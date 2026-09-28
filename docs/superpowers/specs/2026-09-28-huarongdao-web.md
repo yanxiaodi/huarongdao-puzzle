@@ -20,6 +20,7 @@
 参考副本位于 reference/HRD。AllLevels.xml 包含关卡、难度和 MinSteps 等数据；旧项目保存局面、步数、成绩和收藏。
 
 - 棋盘 4 列 × 5 行；曹操到达 x=1、y=3 时通关。
+- 每个 Level 声明 targetPieceId；胜利判定接收 Level 上下文，按目标棋子的 ID 和 2×2 尺寸检查出口，不依赖隐含硬编码 ID。
 - 棋子沿允许的轴向移动，不得越界或重叠。Web 版一次成功的连续拖动计一步。
 - 难度编号 0–6。旧版当前难度通关数达到 ceil(该档关卡总数 × 60%) 后开放下一档。
 - 评分意图：steps / MinSteps ≤ 1.5 得 3 星，≤ 3 得 2 星，否则 1 星。旧代码两个整数相除后再赋给 double，会截断比例；Web 版采用浮点计算并保留阈值。
@@ -39,7 +40,7 @@
 - 拖动棋子、合法移动提示、步数、撤销和重开。
 - 通关弹层、星级反馈、进入下一关。
 - 解法自动播放、暂停、上一步、下一步和退出。
-- 版本化本地存档：当前局面、关卡成绩、收藏与设置。
+- 版本化本地存档：当前游戏快照（含步数与撤销历史）、关卡成绩、收藏与设置；每次已提交的玩家状态变更均持久化。
 - 桌面指针、触屏拖动、基本键盘操作。
 - 响应 prefers-reduced-motion。
 - 首版不包含账号、云同步、排行榜、购买流程或支付后端。音乐和 PWA 后续评估。
@@ -65,6 +66,24 @@ interface SolutionRepository {
 }
 
 type SolutionAccess = "granted" | "locked" | "unavailable";
+
+type PlaybackStatus = "ready" | "playing" | "paused" | "completed" | "locked" | "unavailable" | "invalid";
+type PlaybackSnapshot = {
+  status: PlaybackStatus;
+  positions: Record<string, { x: number; y: number }> | null;
+  currentStep: number;
+  totalSteps: number;
+  message?: string;
+};
+
+interface SolutionPlayback {
+  getSnapshot(): PlaybackSnapshot;
+  play(): PlaybackSnapshot;
+  pause(): PlaybackSnapshot;
+  stepForward(): PlaybackSnapshot;
+  stepBack(): PlaybackSnapshot;
+  exit(): PlaybackSnapshot;
+}
 
 interface SolutionAccessProvider {
   check(levelId: number): Promise<SolutionAccess>;
@@ -93,9 +112,11 @@ React UI -- actions --> GameStore / Rules -- state --> Phaser Scene
 
 关卡转换与解法搜索在构建前离线进行；玩家浏览器不运行求解算法。
 
+GameSnapshot 是游戏状态唯一事实来源，包含棋盘、步数和撤销历史，并提供校验后的 restore。进度快照还保存收藏、成绩与 UserSettings。任何成功移动、撤销、重开、开始关卡、通关、收藏或设置变更均写入版本化存档。
+
 ## 数据迁移
 
-从 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留关卡 ID、名称、难度、MinSteps 和棋子初始位置。导入时检查总数、ID 唯一性、棋子类型、边界、占格冲突和难度分布。每关生成一条可验证解法；浏览器只读取和播放。旧 Windows Phone 存档不自动导入。
+从本地 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留关卡 ID、名称、难度、MinSteps、目标棋子 ID 和棋子初始位置。导入脚本接收显式输入路径；生成的 public/data/levels.json 纳入版本控制，正常构建只读取该 JSON，不要求 reference 文件存在。docs/legacy-level-data.md 记录本地 XML 的提供方式与再生成命令。导入时检查总数、ID 唯一性、目标棋子、棋子类型、边界、占格冲突和难度分布。每关生成一条可验证解法；旧 Windows Phone 存档不自动导入。
 
 ## 首版验收条件
 
