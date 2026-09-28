@@ -22,7 +22,7 @@
 ## Review Focus
 
 - 缺字段、重复 ID、越界或重叠的旧关卡必须报出关卡 ID 和原因，不能静默转换。
-- applyMove 必须拒绝非有限数、非正数或非整数 distance；非法命令不改变棋盘，也不增加步数。
+- applyMove 必须拒绝非有限数、非正数或非整数 distance；多格移动须按方向逐格检查所有中间位置及终点，任一格出界或碰撞都拒绝整条命令，不能越过阻挡棋子；非法命令不改变棋盘，也不增加步数。
 - 缺失、损坏或版本未知的 LocalStorage 存档必须回退到可玩的新局面。
 - 解法数据缺失时显示 unavailable，访问受限时显示 locked；含非法移动的播放进入 invalid 并停止，玩家局面不变。
 - 开启 prefers-reduced-motion 后减少动效，棋盘操作仍可用。
@@ -123,7 +123,7 @@ function hasWon(state: BoardState, level: Level): boolean;
 function rateMoves(steps: number, minSteps: number): 1 | 2 | 3;
 
 type GameSnapshot = {
-  level: Level;
+  levelId: number;
   board: BoardState;
   steps: number;
   undoStack: BoardState[];
@@ -137,16 +137,16 @@ interface GameStore {
   undo(): void;
   restart(): void;
   startLevel(level: Level): void;
-  restore(snapshot: GameSnapshot): void;
+  restore(snapshot: GameSnapshot, canonicalLevel: Level): boolean;
 }
 ~~~
 
-- [ ] 实现棋盘占格、棋子方向、目标位置边界和碰撞判定。
+- [ ] 实现棋盘占格、棋子方向、目标位置边界和碰撞判定；多格移动按方向逐格检查中间位置及终点，路径任一格出界或碰撞即拒绝，不能越过阻挡棋子。
 - [ ] applyMove 在任何位移与占格计算前校验 distance 是有限正整数；否则返回 null，棋盘状态与步数不变。
 - [ ] 其他非法移动返回 null；合法移动返回新状态，不原地改写输入。
 - [ ] 一次成功拖动命令计一步；撤销保存命令前的状态。
 - [ ] 使用 level.targetPieceId 定位目标定义，校验 2×2 尺寸并实现曹操出口判定；完成浮点评分及 ceil(60%) 解锁计算。
-- [ ] 手工核对 1.5 倍/3 倍边界、越界/碰撞和 60% 解锁临界关卡数。
+- [ ] 手工核对 1.5 倍/3 倍边界、越界/碰撞、多格移动中途遇阻和 60% 解锁临界关卡数。
 
 **Deliverable:** 可独立使用的规则模块，移动、计步、胜利、评分与解锁行为明确。
 
@@ -196,7 +196,7 @@ type ProgressSnapshot = {
 };
 
 interface ProgressStore {
-  load(): ProgressSnapshot;
+  load(levels: ReadonlyMap<number, Level>): ProgressSnapshot;
   save(snapshot: ProgressSnapshot): void;
   toggleFavorite(levelId: number): void;
   recordWin(levelId: number, stars: 1 | 2 | 3): void;
@@ -206,7 +206,10 @@ interface ProgressStore {
 - LevelSelectScreen 通过 ProgressStore 展示锁定状态和解锁进度。
 
 - [ ] 实现继续游戏、难度/关卡选择、收藏、撤销、重开和通关弹层。
-- [ ] GameStore 从已校验的存档恢复棋盘与 undoStack，并在新关、撤销和重开时更新完整 GameSnapshot。
+- [ ] ProgressStore.load 将 LocalStorage JSON 当作 unknown，使用当前已发布关卡目录校验 schemaVersion、设置、成绩和收藏字段；game.levelId 必须能解析到目录中的 canonical Level。
+- [ ] 校验当前 board 与 undoStack 每个棋盘的棋子 ID 集合、整数坐标、棋盘边界和占格；steps 必须为非负整数，undoStack 与步数及当前棋盘组成合法连续历史。任一字段失败就丢弃整个存档，回退到可玩的默认进度，不做部分恢复。
+- [ ] GameStore.restore(snapshot, canonicalLevel) 再校验关卡 ID 与棋盘状态；失败返回 false，不装入部分状态，调用方改用默认新局面。
+- [ ] 开始新关、撤销和重开时更新完整 GameSnapshot。
 - [ ] 订阅已提交状态变化：成功移动、撤销、重开、开始关卡和通关后保存 GameSnapshot；收藏、成绩与设置变化写回同一版本化 ProgressSnapshot。
 - [ ] 存档损坏或版本未知时退回可玩的默认进度。
 - [ ] 只用更高星级覆盖已有成绩；完成当前档 ceil(60%) 后开放下一档。
