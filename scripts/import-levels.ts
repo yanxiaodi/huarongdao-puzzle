@@ -16,8 +16,8 @@ const DIFFICULTY_COUNTS: Readonly<Record<Difficulty, number>> = {
 };
 const PIECE_SHAPES: Readonly<Record<number, Pick<Piece, "width" | "height" | "axes">>> = {
   1: { width: 1, height: 1, axes: ["horizontal", "vertical"] },
-  2: { width: 1, height: 2, axes: ["vertical"] },
-  3: { width: 2, height: 1, axes: ["horizontal"] },
+  2: { width: 1, height: 2, axes: ["horizontal", "vertical"] },
+  3: { width: 2, height: 1, axes: ["horizontal", "vertical"] },
   4: { width: 2, height: 2, axes: ["horizontal", "vertical"] },
 };
 const toSimplified = OpenCC.Converter({ from: "tw", to: "cn" });
