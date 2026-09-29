@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import OpenCC from "opencc-js";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
+import { BOARD_HEIGHT, BOARD_WIDTH, LEVEL_SCHEMA_VERSION } from "../src/data/levelSchema.ts";
 import type { Difficulty, Level, Piece } from "../src/data/levelSchema.ts";
 
 const LEVEL_COUNT = 406;
@@ -177,16 +178,16 @@ function validateLayout(levelLabel: string, pieces: Piece[], errors: string[]): 
 
   for (const piece of pieces) {
     const outOfBounds = piece.x < 0 || piece.y < 0 ||
-      piece.x + piece.width > 4 || piece.y + piece.height > 5;
+      piece.x + piece.width > BOARD_WIDTH || piece.y + piece.height > BOARD_HEIGHT;
     if (outOfBounds) {
       errors.push(
-        `Level ${levelLabel} Pieces.${piece.id}: (${piece.x},${piece.y}) ${piece.width}x${piece.height} is outside the 4x5 board.`,
+        `Level ${levelLabel} Pieces.${piece.id}: (${piece.x},${piece.y}) ${piece.width}x${piece.height} is outside the ${BOARD_WIDTH}x${BOARD_HEIGHT} board.`,
       );
     }
 
     for (let y = piece.y; y < piece.y + piece.height; y += 1) {
       for (let x = piece.x; x < piece.x + piece.width; x += 1) {
-        if (x < 0 || x >= 4 || y < 0 || y >= 5) continue;
+        if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) continue;
         const cell = `${x},${y}`;
         const otherPieceId = occupied.get(cell);
         if (otherPieceId) {
@@ -422,12 +423,12 @@ async function main(): Promise<void> {
 
   const outputs = [{
     path: outputPath,
-    content: `${JSON.stringify({ schemaVersion: 1, levels: imported.levels }, null, 2)}\n`,
+    content: `${JSON.stringify({ schemaVersion: LEVEL_SCHEMA_VERSION, levels: imported.levels }, null, 2)}\n`,
   }];
   if (mappingPath) {
     outputs.push({
       path: mappingPath,
-      content: `${JSON.stringify({ schemaVersion: 1, entries: imported.mapping }, null, 2)}\n`,
+      content: `${JSON.stringify({ schemaVersion: LEVEL_SCHEMA_VERSION, entries: imported.mapping }, null, 2)}\n`,
     });
   }
   await writeOutputs(outputs);
