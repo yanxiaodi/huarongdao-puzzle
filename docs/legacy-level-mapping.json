@@ -1,0 +1,2035 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "levelId": 1,
+      "sourceId": 252,
+      "sourceName": "7系列:七步成诗"
+    },
+    {
+      "levelId": 2,
+      "sourceId": 259,
+      "sourceName": "一心一意"
+    },
+    {
+      "levelId": 3,
+      "sourceId": 229,
+      "sourceName": "退一步海阔天空"
+    },
+    {
+      "levelId": 4,
+      "sourceId": 224,
+      "sourceName": "曹13"
+    },
+    {
+      "levelId": 5,
+      "sourceId": 58,
+      "sourceName": "似远实近"
+    },
+    {
+      "levelId": 6,
+      "sourceId": 271,
+      "sourceName": "孔明扇"
+    },
+    {
+      "levelId": 7,
+      "sourceId": 218,
+      "sourceName": "摇旗放曹"
+    },
+    {
+      "levelId": 8,
+      "sourceId": 228,
+      "sourceName": "旭日东升"
+    },
+    {
+      "levelId": 9,
+      "sourceId": 130,
+      "sourceName": "伏羲八卦:地地坤"
+    },
+    {
+      "levelId": 10,
+      "sourceId": 117,
+      "sourceName": "十八步"
+    },
+    {
+      "levelId": 11,
+      "sourceId": 134,
+      "sourceName": "伏羲八卦:山山艮"
+    },
+    {
+      "levelId": 12,
+      "sourceId": 233,
+      "sourceName": "换位思考"
+    },
+    {
+      "levelId": 13,
+      "sourceId": 63,
+      "sourceName": "单兵种的没落"
+    },
+    {
+      "levelId": 14,
+      "sourceId": 175,
+      "sourceName": "伏羲八卦:风山渐"
+    },
+    {
+      "levelId": 15,
+      "sourceId": 153,
+      "sourceName": "伏羲八卦:山地剥"
+    },
+    {
+      "levelId": 16,
+      "sourceId": 406,
+      "sourceName": "身先士卒"
+    },
+    {
+      "levelId": 17,
+      "sourceId": 135,
+      "sourceName": "伏羲八卦:风风巽"
+    },
+    {
+      "levelId": 18,
+      "sourceId": 230,
+      "sourceName": "三七二十一"
+    },
+    {
+      "levelId": 19,
+      "sourceId": 151,
+      "sourceName": "伏羲八卦:地山谦1"
+    },
+    {
+      "levelId": 20,
+      "sourceId": 83,
+      "sourceName": "近在咫尺4"
+    },
+    {
+      "levelId": 21,
+      "sourceId": 146,
+      "sourceName": "伏羲八卦:水地比"
+    },
+    {
+      "levelId": 22,
+      "sourceId": 250,
+      "sourceName": "全民皆兵"
+    },
+    {
+      "levelId": 23,
+      "sourceId": 155,
+      "sourceName": "伏羲八卦:风地观"
+    },
+    {
+      "levelId": 24,
+      "sourceId": 40,
+      "sourceName": "前呼后拥"
+    },
+    {
+      "levelId": 25,
+      "sourceId": 260,
+      "sourceName": "上下镜像"
+    },
+    {
+      "levelId": 26,
+      "sourceId": 164,
+      "sourceName": "伏羲八卦:水泽节"
+    },
+    {
+      "levelId": 27,
+      "sourceId": 137,
+      "sourceName": "伏羲八卦:天地否"
+    },
+    {
+      "levelId": 28,
+      "sourceId": 238,
+      "sourceName": "左右逢源"
+    },
+    {
+      "levelId": 29,
+      "sourceId": 328,
+      "sourceName": "同步倒影(下)"
+    },
+    {
+      "levelId": 30,
+      "sourceId": 327,
+      "sourceName": "同步倒影(上)"
+    },
+    {
+      "levelId": 31,
+      "sourceId": 311,
+      "sourceName": "逃出来啦(下)"
+    },
+    {
+      "levelId": 32,
+      "sourceId": 310,
+      "sourceName": "逃出来啦(上)"
+    },
+    {
+      "levelId": 33,
+      "sourceId": 131,
+      "sourceName": "伏羲八卦:水水坎"
+    },
+    {
+      "levelId": 34,
+      "sourceId": 119,
+      "sourceName": "VIOLET"
+    },
+    {
+      "levelId": 35,
+      "sourceId": 157,
+      "sourceName": "伏羲八卦:泽地萃"
+    },
+    {
+      "levelId": 36,
+      "sourceId": 168,
+      "sourceName": "伏羲八卦:风火家人"
+    },
+    {
+      "levelId": 37,
+      "sourceId": 293,
+      "sourceName": "莱希"
+    },
+    {
+      "levelId": 38,
+      "sourceId": 50,
+      "sourceName": "比翼横空"
+    },
+    {
+      "levelId": 39,
+      "sourceId": 121,
+      "sourceName": "PANSY"
+    },
+    {
+      "levelId": 40,
+      "sourceId": 302,
+      "sourceName": "佳人梳妆(佳人)"
+    },
+    {
+      "levelId": 41,
+      "sourceId": 303,
+      "sourceName": "佳人梳妆(镜像)"
+    },
+    {
+      "levelId": 42,
+      "sourceId": 118,
+      "sourceName": "DAISY"
+    },
+    {
+      "levelId": 43,
+      "sourceId": 382,
+      "sourceName": "横行霸道"
+    },
+    {
+      "levelId": 44,
+      "sourceId": 149,
+      "sourceName": "伏羲八卦:地雷复"
+    },
+    {
+      "levelId": 45,
+      "sourceId": 143,
+      "sourceName": "伏羲八卦:山天大畜"
+    },
+    {
+      "levelId": 46,
+      "sourceId": 144,
+      "sourceName": "伏羲八卦:风天小畜"
+    },
+    {
+      "levelId": 47,
+      "sourceId": 132,
+      "sourceName": "伏羲八卦:火火离"
+    },
+    {
+      "levelId": 48,
+      "sourceId": 262,
+      "sourceName": "首尾互换(下)"
+    },
+    {
+      "levelId": 49,
+      "sourceId": 261,
+      "sourceName": "首尾互换(上)"
+    },
+    {
+      "levelId": 50,
+      "sourceId": 167,
+      "sourceName": "伏羲八卦:山火贲"
+    },
+    {
+      "levelId": 51,
+      "sourceId": 159,
+      "sourceName": "伏羲八卦:水雷屯"
+    },
+    {
+      "levelId": 52,
+      "sourceId": 276,
+      "sourceName": "孔明扇2"
+    },
+    {
+      "levelId": 53,
+      "sourceId": 133,
+      "sourceName": "伏羲八卦:雷雷震"
+    },
+    {
+      "levelId": 54,
+      "sourceId": 275,
+      "sourceName": "自成镜像"
+    },
+    {
+      "levelId": 55,
+      "sourceId": 350,
+      "sourceName": "凤凰倒影(凰)"
+    },
+    {
+      "levelId": 56,
+      "sourceId": 349,
+      "sourceName": "凤凰倒影(凤)"
+    },
+    {
+      "levelId": 57,
+      "sourceId": 140,
+      "sourceName": "伏羲八卦:火天大有"
+    },
+    {
+      "levelId": 58,
+      "sourceId": 161,
+      "sourceName": "伏羲八卦:水山蹇"
+    },
+    {
+      "levelId": 59,
+      "sourceId": 174,
+      "sourceName": "伏羲八卦:雷泽归妹"
+    },
+    {
+      "levelId": 60,
+      "sourceId": 30,
+      "sourceName": "一横最容易解的布局2"
+    },
+    {
+      "levelId": 61,
+      "sourceId": 12,
+      "sourceName": "捷足先登"
+    },
+    {
+      "levelId": 62,
+      "sourceId": 29,
+      "sourceName": "一横最容易解的布局1"
+    },
+    {
+      "levelId": 63,
+      "sourceId": 199,
+      "sourceName": "四橫定式E"
+    },
+    {
+      "levelId": 64,
+      "sourceId": 268,
+      "sourceName": "千里走单骑"
+    },
+    {
+      "levelId": 65,
+      "sourceId": 27,
+      "sourceName": "勇闯五关"
+    },
+    {
+      "levelId": 66,
+      "sourceId": 347,
+      "sourceName": "形颠神倒(上)"
+    },
+    {
+      "levelId": 67,
+      "sourceId": 41,
+      "sourceName": "兵临曹营"
+    },
+    {
+      "levelId": 68,
+      "sourceId": 148,
+      "sourceName": "伏羲八卦:火地晋"
+    },
+    {
+      "levelId": 69,
+      "sourceId": 304,
+      "sourceName": "双头俩尾"
+    },
+    {
+      "levelId": 70,
+      "sourceId": 165,
+      "sourceName": "伏羲八卦:火雷噬嗑"
+    },
+    {
+      "levelId": 71,
+      "sourceId": 136,
+      "sourceName": "伏羲八卦:泽泽兑"
+    },
+    {
+      "levelId": 72,
+      "sourceId": 294,
+      "sourceName": "米拉"
+    },
+    {
+      "levelId": 73,
+      "sourceId": 296,
+      "sourceName": "神在内涵"
+    },
+    {
+      "levelId": 74,
+      "sourceId": 42,
+      "sourceName": "五将逼宫"
+    },
+    {
+      "levelId": 75,
+      "sourceId": 314,
+      "sourceName": "未卜先知"
+    },
+    {
+      "levelId": 76,
+      "sourceId": 378,
+      "sourceName": "抽梁断柱"
+    },
+    {
+      "levelId": 77,
+      "sourceId": 253,
+      "sourceName": "7系列:整齐排列"
+    },
+    {
+      "levelId": 78,
+      "sourceId": 313,
+      "sourceName": "一颠快三步(下)"
+    },
+    {
+      "levelId": 79,
+      "sourceId": 305,
+      "sourceName": "分兵作战"
+    },
+    {
+      "levelId": 80,
+      "sourceId": 295,
+      "sourceName": "形同神异"
+    },
+    {
+      "levelId": 81,
+      "sourceId": 245,
+      "sourceName": "大乔小乔(下)"
+    },
+    {
+      "levelId": 82,
+      "sourceId": 188,
+      "sourceName": "一橫定式B"
+    },
+    {
+      "levelId": 83,
+      "sourceId": 44,
+      "sourceName": "iPhone关卡1"
+    },
+    {
+      "levelId": 84,
+      "sourceId": 324,
+      "sourceName": "倒影丫解(下)"
+    },
+    {
+      "levelId": 85,
+      "sourceId": 323,
+      "sourceName": "倒影丫解(上)"
+    },
+    {
+      "levelId": 86,
+      "sourceId": 198,
+      "sourceName": "四橫定式D"
+    },
+    {
+      "levelId": 87,
+      "sourceId": 307,
+      "sourceName": "丫形优解"
+    },
+    {
+      "levelId": 88,
+      "sourceId": 163,
+      "sourceName": "伏羲八卦:风水涣"
+    },
+    {
+      "levelId": 89,
+      "sourceId": 309,
+      "sourceName": "一颠快两步(下)"
+    },
+    {
+      "levelId": 90,
+      "sourceId": 10,
+      "sourceName": "一路顺风"
+    },
+    {
+      "levelId": 91,
+      "sourceId": 244,
+      "sourceName": "大乔小乔(上)"
+    },
+    {
+      "levelId": 92,
+      "sourceId": 53,
+      "sourceName": "四将连关"
+    },
+    {
+      "levelId": 93,
+      "sourceId": 284,
+      "sourceName": "不惑之前"
+    },
+    {
+      "levelId": 94,
+      "sourceId": 405,
+      "sourceName": "小旋風Ⅱ"
+    },
+    {
+      "levelId": 95,
+      "sourceId": 176,
+      "sourceName": "伏羲八卦:山泽损"
+    },
+    {
+      "levelId": 96,
+      "sourceId": 316,
+      "sourceName": "六将之近在咫尺"
+    },
+    {
+      "levelId": 97,
+      "sourceId": 81,
+      "sourceName": "奖杯"
+    },
+    {
+      "levelId": 98,
+      "sourceId": 189,
+      "sourceName": "一橫定式C"
+    },
+    {
+      "levelId": 99,
+      "sourceId": 120,
+      "sourceName": "POPPY"
+    },
+    {
+      "levelId": 100,
+      "sourceId": 34,
+      "sourceName": "三横最容易解的布局"
+    },
+    {
+      "levelId": 101,
+      "sourceId": 21,
+      "sourceName": "堵塞要道"
+    },
+    {
+      "levelId": 102,
+      "sourceId": 404,
+      "sourceName": "小旋風Ⅰ"
+    },
+    {
+      "levelId": 103,
+      "sourceId": 308,
+      "sourceName": "一颠快两步(上)"
+    },
+    {
+      "levelId": 104,
+      "sourceId": 325,
+      "sourceName": "倒影等优(上)"
+    },
+    {
+      "levelId": 105,
+      "sourceId": 312,
+      "sourceName": "一颠快三步(上)"
+    },
+    {
+      "levelId": 106,
+      "sourceId": 263,
+      "sourceName": "众志成城"
+    },
+    {
+      "levelId": 107,
+      "sourceId": 381,
+      "sourceName": "火烧连营"
+    },
+    {
+      "levelId": 108,
+      "sourceId": 326,
+      "sourceName": "倒影等优(下)"
+    },
+    {
+      "levelId": 109,
+      "sourceId": 357,
+      "sourceName": "合兵一处"
+    },
+    {
+      "levelId": 110,
+      "sourceId": 82,
+      "sourceName": "气势汹汹"
+    },
+    {
+      "levelId": 111,
+      "sourceId": 285,
+      "sourceName": "不惑之后"
+    },
+    {
+      "levelId": 112,
+      "sourceId": 172,
+      "sourceName": "伏羲八卦:雷风恒"
+    },
+    {
+      "levelId": 113,
+      "sourceId": 46,
+      "sourceName": "前挡后阻"
+    },
+    {
+      "levelId": 114,
+      "sourceId": 190,
+      "sourceName": "一橫定式D"
+    },
+    {
+      "levelId": 115,
+      "sourceId": 292,
+      "sourceName": "孔明扇3"
+    },
+    {
+      "levelId": 116,
+      "sourceId": 158,
+      "sourceName": "伏羲八卦:水火既济"
+    },
+    {
+      "levelId": 117,
+      "sourceId": 270,
+      "sourceName": "桃园三结义"
+    },
+    {
+      "levelId": 118,
+      "sourceId": 348,
+      "sourceName": "形颠神倒(下)"
+    },
+    {
+      "levelId": 119,
+      "sourceId": 197,
+      "sourceName": "四橫定式C"
+    },
+    {
+      "levelId": 120,
+      "sourceId": 298,
+      "sourceName": "龙凤三胞(兄长)"
+    },
+    {
+      "levelId": 121,
+      "sourceId": 299,
+      "sourceName": "龙凤三胞(大妹)"
+    },
+    {
+      "levelId": 122,
+      "sourceId": 360,
+      "sourceName": "貔貅倒影(貅)"
+    },
+    {
+      "levelId": 123,
+      "sourceId": 359,
+      "sourceName": "貔貅倒影(貔)"
+    },
+    {
+      "levelId": 124,
+      "sourceId": 300,
+      "sourceName": "龙凤三胞(小妹)"
+    },
+    {
+      "levelId": 125,
+      "sourceId": 205,
+      "sourceName": "六将之近在咫尺B"
+    },
+    {
+      "levelId": 126,
+      "sourceId": 279,
+      "sourceName": "木牛流马"
+    },
+    {
+      "levelId": 127,
+      "sourceId": 289,
+      "sourceName": "形近神似(下)"
+    },
+    {
+      "levelId": 128,
+      "sourceId": 288,
+      "sourceName": "形近神似(上)"
+    },
+    {
+      "levelId": 129,
+      "sourceId": 306,
+      "sourceName": "闪展腾挪"
+    },
+    {
+      "levelId": 130,
+      "sourceId": 187,
+      "sourceName": "一横定式A"
+    },
+    {
+      "levelId": 131,
+      "sourceId": 122,
+      "sourceName": "SNOWDROP"
+    },
+    {
+      "levelId": 132,
+      "sourceId": 196,
+      "sourceName": "四橫定式B"
+    },
+    {
+      "levelId": 133,
+      "sourceId": 403,
+      "sourceName": "小旋風"
+    },
+    {
+      "levelId": 134,
+      "sourceId": 370,
+      "sourceName": "轅門射戟Ｂ"
+    },
+    {
+      "levelId": 135,
+      "sourceId": 254,
+      "sourceName": "7系列:倒扣杯中"
+    },
+    {
+      "levelId": 136,
+      "sourceId": 6,
+      "sourceName": "雨声淅沥"
+    },
+    {
+      "levelId": 137,
+      "sourceId": 264,
+      "sourceName": "孔融让梨"
+    },
+    {
+      "levelId": 138,
+      "sourceId": 358,
+      "sourceName": "兵分二路"
+    },
+    {
+      "levelId": 139,
+      "sourceId": 192,
+      "sourceName": "二橫定式B"
+    },
+    {
+      "levelId": 140,
+      "sourceId": 75,
+      "sourceName": "扰敌之策"
+    },
+    {
+      "levelId": 141,
+      "sourceId": 77,
+      "sourceName": "星罗棋布"
+    },
+    {
+      "levelId": 142,
+      "sourceId": 73,
+      "sourceName": "一字长蛇阵"
+    },
+    {
+      "levelId": 143,
+      "sourceId": 74,
+      "sourceName": "一字长蛇阵2"
+    },
+    {
+      "levelId": 144,
+      "sourceId": 191,
+      "sourceName": "二橫定式A"
+    },
+    {
+      "levelId": 145,
+      "sourceId": 48,
+      "sourceName": "兵威将广"
+    },
+    {
+      "levelId": 146,
+      "sourceId": 223,
+      "sourceName": "殊途同归IV"
+    },
+    {
+      "levelId": 147,
+      "sourceId": 195,
+      "sourceName": "四橫定式A"
+    },
+    {
+      "levelId": 148,
+      "sourceId": 355,
+      "sourceName": "麒麟倒影(麒)"
+    },
+    {
+      "levelId": 149,
+      "sourceId": 356,
+      "sourceName": "麒麟倒影(麟)"
+    },
+    {
+      "levelId": 150,
+      "sourceId": 129,
+      "sourceName": "伏羲八卦:天天乾"
+    },
+    {
+      "levelId": 151,
+      "sourceId": 145,
+      "sourceName": "伏羲八卦:泽天夬"
+    },
+    {
+      "levelId": 152,
+      "sourceId": 125,
+      "sourceName": "四面八方"
+    },
+    {
+      "levelId": 153,
+      "sourceId": 38,
+      "sourceName": "背水列阵"
+    },
+    {
+      "levelId": 154,
+      "sourceId": 7,
+      "sourceName": "左右布兵"
+    },
+    {
+      "levelId": 155,
+      "sourceId": 126,
+      "sourceName": "牛气冲天"
+    },
+    {
+      "levelId": 156,
+      "sourceId": 278,
+      "sourceName": "鞠躬尽瘁"
+    },
+    {
+      "levelId": 157,
+      "sourceId": 283,
+      "sourceName": "花间一壶酒"
+    },
+    {
+      "levelId": 158,
+      "sourceId": 380,
+      "sourceName": "能上能下"
+    },
+    {
+      "levelId": 159,
+      "sourceId": 39,
+      "sourceName": "四面楚歌"
+    },
+    {
+      "levelId": 160,
+      "sourceId": 60,
+      "sourceName": "五横最难的开局"
+    },
+    {
+      "levelId": 161,
+      "sourceId": 32,
+      "sourceName": "二横最容易解的布局"
+    },
+    {
+      "levelId": 162,
+      "sourceId": 269,
+      "sourceName": "三英战吕布"
+    },
+    {
+      "levelId": 163,
+      "sourceId": 255,
+      "sourceName": "7系列:飘在空中"
+    },
+    {
+      "levelId": 164,
+      "sourceId": 9,
+      "sourceName": "一路进军"
+    },
+    {
+      "levelId": 165,
+      "sourceId": 286,
+      "sourceName": "双兵争锋"
+    },
+    {
+      "levelId": 166,
+      "sourceId": 219,
+      "sourceName": "轮回"
+    },
+    {
+      "levelId": 167,
+      "sourceId": 282,
+      "sourceName": "浪迹天涯"
+    },
+    {
+      "levelId": 168,
+      "sourceId": 265,
+      "sourceName": "仙人推磨"
+    },
+    {
+      "levelId": 169,
+      "sourceId": 297,
+      "sourceName": "面具"
+    },
+    {
+      "levelId": 170,
+      "sourceId": 369,
+      "sourceName": "轅門射戟Ａ"
+    },
+    {
+      "levelId": 171,
+      "sourceId": 4,
+      "sourceName": "齐头并进"
+    },
+    {
+      "levelId": 172,
+      "sourceId": 95,
+      "sourceName": "砝码"
+    },
+    {
+      "levelId": 173,
+      "sourceId": 266,
+      "sourceName": "陆绩怀橘"
+    },
+    {
+      "levelId": 174,
+      "sourceId": 213,
+      "sourceName": "六将守关6"
+    },
+    {
+      "levelId": 175,
+      "sourceId": 401,
+      "sourceName": "倒影胡马"
+    },
+    {
+      "levelId": 176,
+      "sourceId": 204,
+      "sourceName": "六将之近在咫尺A"
+    },
+    {
+      "levelId": 177,
+      "sourceId": 182,
+      "sourceName": "三羊开泰1"
+    },
+    {
+      "levelId": 178,
+      "sourceId": 150,
+      "sourceName": "伏羲八卦:雷地豫"
+    },
+    {
+      "levelId": 179,
+      "sourceId": 113,
+      "sourceName": "互不相讓"
+    },
+    {
+      "levelId": 180,
+      "sourceId": 13,
+      "sourceName": "插翅难飞"
+    },
+    {
+      "levelId": 181,
+      "sourceId": 11,
+      "sourceName": "围而不歼"
+    },
+    {
+      "levelId": 182,
+      "sourceId": 372,
+      "sourceName": "雪拥蓝关"
+    },
+    {
+      "levelId": 183,
+      "sourceId": 368,
+      "sourceName": "狼影"
+    },
+    {
+      "levelId": 184,
+      "sourceId": 367,
+      "sourceName": "虎踪"
+    },
+    {
+      "levelId": 185,
+      "sourceId": 362,
+      "sourceName": "同步堂亲(弟)"
+    },
+    {
+      "levelId": 186,
+      "sourceId": 361,
+      "sourceName": "同步堂亲(兄)"
+    },
+    {
+      "levelId": 187,
+      "sourceId": 322,
+      "sourceName": "手形优解"
+    },
+    {
+      "levelId": 188,
+      "sourceId": 315,
+      "sourceName": "困兽犹斗"
+    },
+    {
+      "levelId": 189,
+      "sourceId": 206,
+      "sourceName": "六将之步步高1"
+    },
+    {
+      "levelId": 190,
+      "sourceId": 353,
+      "sourceName": "电阻优解"
+    },
+    {
+      "levelId": 191,
+      "sourceId": 379,
+      "sourceName": "有去有回"
+    },
+    {
+      "levelId": 192,
+      "sourceId": 203,
+      "sourceName": "节节高升"
+    },
+    {
+      "levelId": 193,
+      "sourceId": 57,
+      "sourceName": "插翅难飞2"
+    },
+    {
+      "levelId": 194,
+      "sourceId": 220,
+      "sourceName": "殊途同归I"
+    },
+    {
+      "levelId": 195,
+      "sourceId": 209,
+      "sourceName": "六将守关2"
+    },
+    {
+      "levelId": 196,
+      "sourceId": 202,
+      "sourceName": "一夫当关"
+    },
+    {
+      "levelId": 197,
+      "sourceId": 345,
+      "sourceName": "形神颠倒(上)"
+    },
+    {
+      "levelId": 198,
+      "sourceId": 346,
+      "sourceName": "形神颠倒(下)"
+    },
+    {
+      "levelId": 199,
+      "sourceId": 318,
+      "sourceName": "扇壶一体(扇)"
+    },
+    {
+      "levelId": 200,
+      "sourceId": 319,
+      "sourceName": "扇壶一体(壶)"
+    },
+    {
+      "levelId": 201,
+      "sourceId": 45,
+      "sourceName": "三军联防"
+    },
+    {
+      "levelId": 202,
+      "sourceId": 193,
+      "sourceName": "三橫定式A"
+    },
+    {
+      "levelId": 203,
+      "sourceId": 373,
+      "sourceName": "云横秦岭"
+    },
+    {
+      "levelId": 204,
+      "sourceId": 400,
+      "sourceName": "兵不厌走"
+    },
+    {
+      "levelId": 205,
+      "sourceId": 123,
+      "sourceName": "四路進兵2"
+    },
+    {
+      "levelId": 206,
+      "sourceId": 277,
+      "sourceName": "大意失荆州"
+    },
+    {
+      "levelId": 207,
+      "sourceId": 256,
+      "sourceName": "7系列:四面楚歌"
+    },
+    {
+      "levelId": 208,
+      "sourceId": 399,
+      "sourceName": "漩涡乍现2"
+    },
+    {
+      "levelId": 209,
+      "sourceId": 56,
+      "sourceName": "井底之蛙"
+    },
+    {
+      "levelId": 210,
+      "sourceId": 248,
+      "sourceName": "新鸿门宴Ⅰ"
+    },
+    {
+      "levelId": 211,
+      "sourceId": 398,
+      "sourceName": "漩涡乍现"
+    },
+    {
+      "levelId": 212,
+      "sourceId": 397,
+      "sourceName": "小孤雁"
+    },
+    {
+      "levelId": 213,
+      "sourceId": 80,
+      "sourceName": "层层设防3"
+    },
+    {
+      "levelId": 214,
+      "sourceId": 36,
+      "sourceName": "四横最易解的布局"
+    },
+    {
+      "levelId": 215,
+      "sourceId": 234,
+      "sourceName": "水中倒影之实"
+    },
+    {
+      "levelId": 216,
+      "sourceId": 235,
+      "sourceName": "水中倒影之像"
+    },
+    {
+      "levelId": 217,
+      "sourceId": 128,
+      "sourceName": "匹马嘶风"
+    },
+    {
+      "levelId": 218,
+      "sourceId": 343,
+      "sourceName": "古稀倒影(上)"
+    },
+    {
+      "levelId": 219,
+      "sourceId": 388,
+      "sourceName": "檐浮旭日"
+    },
+    {
+      "levelId": 220,
+      "sourceId": 246,
+      "sourceName": "旋转让道"
+    },
+    {
+      "levelId": 221,
+      "sourceId": 8,
+      "sourceName": "桃花园中"
+    },
+    {
+      "levelId": 222,
+      "sourceId": 2,
+      "sourceName": "指挥若定"
+    },
+    {
+      "levelId": 223,
+      "sourceId": 173,
+      "sourceName": "伏羲八卦:风雷益"
+    },
+    {
+      "levelId": 224,
+      "sourceId": 344,
+      "sourceName": "古稀倒影(下)"
+    },
+    {
+      "levelId": 225,
+      "sourceId": 376,
+      "sourceName": "山穷水尽"
+    },
+    {
+      "levelId": 226,
+      "sourceId": 141,
+      "sourceName": "伏羲八卦:天雷无妄"
+    },
+    {
+      "levelId": 227,
+      "sourceId": 272,
+      "sourceName": "步步高之\"义放曹操\""
+    },
+    {
+      "levelId": 228,
+      "sourceId": 330,
+      "sourceName": "活眼倒影(下)"
+    },
+    {
+      "levelId": 229,
+      "sourceId": 351,
+      "sourceName": "互生优解"
+    },
+    {
+      "levelId": 230,
+      "sourceId": 329,
+      "sourceName": "活眼倒影(上)"
+    },
+    {
+      "levelId": 231,
+      "sourceId": 52,
+      "sourceName": "屯兵东路"
+    },
+    {
+      "levelId": 232,
+      "sourceId": 207,
+      "sourceName": "六将之步步高2"
+    },
+    {
+      "levelId": 233,
+      "sourceId": 114,
+      "sourceName": "胡馬窺江"
+    },
+    {
+      "levelId": 234,
+      "sourceId": 3,
+      "sourceName": "将拥曹营"
+    },
+    {
+      "levelId": 235,
+      "sourceId": 5,
+      "sourceName": "兵分三路"
+    },
+    {
+      "levelId": 236,
+      "sourceId": 402,
+      "sourceName": "首居中道"
+    },
+    {
+      "levelId": 237,
+      "sourceId": 152,
+      "sourceName": "伏羲八卦:地山谦2"
+    },
+    {
+      "levelId": 238,
+      "sourceId": 16,
+      "sourceName": "双将挡路"
+    },
+    {
+      "levelId": 239,
+      "sourceId": 169,
+      "sourceName": "伏羲八卦:火泽睽"
+    },
+    {
+      "levelId": 240,
+      "sourceId": 201,
+      "sourceName": "勿入歧途"
+    },
+    {
+      "levelId": 241,
+      "sourceId": 115,
+      "sourceName": "馬首是瞻"
+    },
+    {
+      "levelId": 242,
+      "sourceId": 247,
+      "sourceName": "兵随将转"
+    },
+    {
+      "levelId": 243,
+      "sourceId": 76,
+      "sourceName": "左兵右将"
+    },
+    {
+      "levelId": 244,
+      "sourceId": 51,
+      "sourceName": "夹道藏兵"
+    },
+    {
+      "levelId": 245,
+      "sourceId": 281,
+      "sourceName": "上下求索"
+    },
+    {
+      "levelId": 246,
+      "sourceId": 366,
+      "sourceName": "曹操划小圈"
+    },
+    {
+      "levelId": 247,
+      "sourceId": 332,
+      "sourceName": "触角优解(右)"
+    },
+    {
+      "levelId": 248,
+      "sourceId": 331,
+      "sourceName": "触角优解(左)"
+    },
+    {
+      "levelId": 249,
+      "sourceId": 354,
+      "sourceName": "平行优解"
+    },
+    {
+      "levelId": 250,
+      "sourceId": 208,
+      "sourceName": "六将守关1"
+    },
+    {
+      "levelId": 251,
+      "sourceId": 200,
+      "sourceName": "殊途同归"
+    },
+    {
+      "levelId": 252,
+      "sourceId": 384,
+      "sourceName": "側面虎"
+    },
+    {
+      "levelId": 253,
+      "sourceId": 214,
+      "sourceName": "六将守关7"
+    },
+    {
+      "levelId": 254,
+      "sourceId": 186,
+      "sourceName": "逆时风车"
+    },
+    {
+      "levelId": 255,
+      "sourceId": 25,
+      "sourceName": "四路进兵"
+    },
+    {
+      "levelId": 256,
+      "sourceId": 241,
+      "sourceName": "七上八下(上)"
+    },
+    {
+      "levelId": 257,
+      "sourceId": 321,
+      "sourceName": "人形优解"
+    },
+    {
+      "levelId": 258,
+      "sourceId": 211,
+      "sourceName": "六将守关4"
+    },
+    {
+      "levelId": 259,
+      "sourceId": 242,
+      "sourceName": "七上八下(下)"
+    },
+    {
+      "levelId": 260,
+      "sourceId": 301,
+      "sourceName": "小鬼难缠"
+    },
+    {
+      "levelId": 261,
+      "sourceId": 24,
+      "sourceName": "水泄不通"
+    },
+    {
+      "levelId": 262,
+      "sourceId": 139,
+      "sourceName": "伏羲八卦:天水讼"
+    },
+    {
+      "levelId": 263,
+      "sourceId": 374,
+      "sourceName": "八阵图"
+    },
+    {
+      "levelId": 264,
+      "sourceId": 178,
+      "sourceName": "伏羲八卦:风泽中孚"
+    },
+    {
+      "levelId": 265,
+      "sourceId": 251,
+      "sourceName": "三顾茅庐"
+    },
+    {
+      "levelId": 266,
+      "sourceId": 385,
+      "sourceName": "胸有朝陽"
+    },
+    {
+      "levelId": 267,
+      "sourceId": 14,
+      "sourceName": "守口如瓶1"
+    },
+    {
+      "levelId": 268,
+      "sourceId": 116,
+      "sourceName": "異地同心"
+    },
+    {
+      "levelId": 269,
+      "sourceId": 43,
+      "sourceName": "云遮雾障"
+    },
+    {
+      "levelId": 270,
+      "sourceId": 386,
+      "sourceName": "江村夕照"
+    },
+    {
+      "levelId": 271,
+      "sourceId": 387,
+      "sourceName": "曲水流觴"
+    },
+    {
+      "levelId": 272,
+      "sourceId": 1,
+      "sourceName": "横刀立马"
+    },
+    {
+      "levelId": 273,
+      "sourceId": 210,
+      "sourceName": "六将守关3"
+    },
+    {
+      "levelId": 274,
+      "sourceId": 194,
+      "sourceName": "三橫定式B"
+    },
+    {
+      "levelId": 275,
+      "sourceId": 221,
+      "sourceName": "殊途同归II"
+    },
+    {
+      "levelId": 276,
+      "sourceId": 377,
+      "sourceName": "上屋抽梯"
+    },
+    {
+      "levelId": 277,
+      "sourceId": 383,
+      "sourceName": "睡狮苏醒"
+    },
+    {
+      "levelId": 278,
+      "sourceId": 138,
+      "sourceName": "伏羲八卦:地天泰"
+    },
+    {
+      "levelId": 279,
+      "sourceId": 371,
+      "sourceName": "以逸待劳"
+    },
+    {
+      "levelId": 280,
+      "sourceId": 166,
+      "sourceName": "伏羲八卦:火山旅"
+    },
+    {
+      "levelId": 281,
+      "sourceId": 17,
+      "sourceName": "横马当关"
+    },
+    {
+      "levelId": 282,
+      "sourceId": 217,
+      "sourceName": "寓巧於拙"
+    },
+    {
+      "levelId": 283,
+      "sourceId": 37,
+      "sourceName": "乱石崩云"
+    },
+    {
+      "levelId": 284,
+      "sourceId": 28,
+      "sourceName": "一横最难解的布局"
+    },
+    {
+      "levelId": 285,
+      "sourceId": 177,
+      "sourceName": "伏羲八卦:泽山咸"
+    },
+    {
+      "levelId": 286,
+      "sourceId": 212,
+      "sourceName": "六将守关5"
+    },
+    {
+      "levelId": 287,
+      "sourceId": 142,
+      "sourceName": "伏羲八卦:天山遯"
+    },
+    {
+      "levelId": 288,
+      "sourceId": 290,
+      "sourceName": "旋转砝码"
+    },
+    {
+      "levelId": 289,
+      "sourceId": 287,
+      "sourceName": "高位分歧"
+    },
+    {
+      "levelId": 290,
+      "sourceId": 26,
+      "sourceName": "入地无门"
+    },
+    {
+      "levelId": 291,
+      "sourceId": 20,
+      "sourceName": "兵挡将阻"
+    },
+    {
+      "levelId": 292,
+      "sourceId": 216,
+      "sourceName": "換離為兌"
+    },
+    {
+      "levelId": 293,
+      "sourceId": 185,
+      "sourceName": "顺时风车"
+    },
+    {
+      "levelId": 294,
+      "sourceId": 35,
+      "sourceName": "四横最难解的布局"
+    },
+    {
+      "levelId": 295,
+      "sourceId": 280,
+      "sourceName": "诸葛八阵"
+    },
+    {
+      "levelId": 296,
+      "sourceId": 181,
+      "sourceName": "獨闢蹊徑"
+    },
+    {
+      "levelId": 297,
+      "sourceId": 105,
+      "sourceName": "大渡橋橫鐵索寒"
+    },
+    {
+      "levelId": 298,
+      "sourceId": 156,
+      "sourceName": "伏羲八卦:地泽临"
+    },
+    {
+      "levelId": 299,
+      "sourceId": 69,
+      "sourceName": "行百里者半九十"
+    },
+    {
+      "levelId": 300,
+      "sourceId": 94,
+      "sourceName": "穷途末路"
+    },
+    {
+      "levelId": 301,
+      "sourceId": 183,
+      "sourceName": "三羊开泰2"
+    },
+    {
+      "levelId": 302,
+      "sourceId": 243,
+      "sourceName": "别无选择"
+    },
+    {
+      "levelId": 303,
+      "sourceId": 364,
+      "sourceName": "合久必分"
+    },
+    {
+      "levelId": 304,
+      "sourceId": 222,
+      "sourceName": "殊途同归III"
+    },
+    {
+      "levelId": 305,
+      "sourceId": 231,
+      "sourceName": "高处不胜寒"
+    },
+    {
+      "levelId": 306,
+      "sourceId": 215,
+      "sourceName": "六将之跋山涉水"
+    },
+    {
+      "levelId": 307,
+      "sourceId": 64,
+      "sourceName": "欲罢不能"
+    },
+    {
+      "levelId": 308,
+      "sourceId": 108,
+      "sourceName": "歧路亡羊"
+    },
+    {
+      "levelId": 309,
+      "sourceId": 106,
+      "sourceName": "魚游春水"
+    },
+    {
+      "levelId": 310,
+      "sourceId": 170,
+      "sourceName": "伏羲八卦:雷山小过"
+    },
+    {
+      "levelId": 311,
+      "sourceId": 104,
+      "sourceName": "困於赤紱"
+    },
+    {
+      "levelId": 312,
+      "sourceId": 179,
+      "sourceName": "颠倒96(陰)"
+    },
+    {
+      "levelId": 313,
+      "sourceId": 162,
+      "sourceName": "伏羲八卦:山水蒙"
+    },
+    {
+      "levelId": 314,
+      "sourceId": 352,
+      "sourceName": "重链优解"
+    },
+    {
+      "levelId": 315,
+      "sourceId": 180,
+      "sourceName": "颠倒96(陽)"
+    },
+    {
+      "levelId": 316,
+      "sourceId": 65,
+      "sourceName": "横行之将"
+    },
+    {
+      "levelId": 317,
+      "sourceId": 232,
+      "sourceName": "步步高3"
+    },
+    {
+      "levelId": 318,
+      "sourceId": 236,
+      "sourceName": "进退维谷"
+    },
+    {
+      "levelId": 319,
+      "sourceId": 375,
+      "sourceName": "兵据曹营"
+    },
+    {
+      "levelId": 320,
+      "sourceId": 317,
+      "sourceName": "H形优解"
+    },
+    {
+      "levelId": 321,
+      "sourceId": 160,
+      "sourceName": "伏羲八卦:雷水解"
+    },
+    {
+      "levelId": 322,
+      "sourceId": 23,
+      "sourceName": "层峦叠嶂"
+    },
+    {
+      "levelId": 323,
+      "sourceId": 47,
+      "sourceName": "近在咫尺"
+    },
+    {
+      "levelId": 324,
+      "sourceId": 67,
+      "sourceName": "列队欢送2"
+    },
+    {
+      "levelId": 325,
+      "sourceId": 92,
+      "sourceName": "数字系列:8"
+    },
+    {
+      "levelId": 326,
+      "sourceId": 15,
+      "sourceName": "守口如瓶2"
+    },
+    {
+      "levelId": 327,
+      "sourceId": 237,
+      "sourceName": "不谋而合"
+    },
+    {
+      "levelId": 328,
+      "sourceId": 103,
+      "sourceName": "暗渡陳倉"
+    },
+    {
+      "levelId": 329,
+      "sourceId": 147,
+      "sourceName": "伏羲八卦:地火明夷"
+    },
+    {
+      "levelId": 330,
+      "sourceId": 72,
+      "sourceName": "以退为进"
+    },
+    {
+      "levelId": 331,
+      "sourceId": 68,
+      "sourceName": "百花盛开"
+    },
+    {
+      "levelId": 332,
+      "sourceId": 184,
+      "sourceName": "三羊开泰3"
+    },
+    {
+      "levelId": 333,
+      "sourceId": 112,
+      "sourceName": "相看兩不厭"
+    },
+    {
+      "levelId": 334,
+      "sourceId": 225,
+      "sourceName": "百步歧形"
+    },
+    {
+      "levelId": 335,
+      "sourceId": 239,
+      "sourceName": "进退自如"
+    },
+    {
+      "levelId": 336,
+      "sourceId": 154,
+      "sourceName": "伏羲八卦:地风升"
+    },
+    {
+      "levelId": 337,
+      "sourceId": 107,
+      "sourceName": "古堡藏龍"
+    },
+    {
+      "levelId": 338,
+      "sourceId": 249,
+      "sourceName": "新鸿门宴Ⅱ"
+    },
+    {
+      "levelId": 339,
+      "sourceId": 395,
+      "sourceName": "居中斡旋"
+    },
+    {
+      "levelId": 340,
+      "sourceId": 102,
+      "sourceName": "高廈一零一"
+    },
+    {
+      "levelId": 341,
+      "sourceId": 396,
+      "sourceName": "開到茶蘼"
+    },
+    {
+      "levelId": 342,
+      "sourceId": 101,
+      "sourceName": "孤雁南飛"
+    },
+    {
+      "levelId": 343,
+      "sourceId": 84,
+      "sourceName": "数字系列:0"
+    },
+    {
+      "levelId": 344,
+      "sourceId": 66,
+      "sourceName": "列队欢送"
+    },
+    {
+      "levelId": 345,
+      "sourceId": 365,
+      "sourceName": "日月同辉"
+    },
+    {
+      "levelId": 346,
+      "sourceId": 226,
+      "sourceName": "四兵同心"
+    },
+    {
+      "levelId": 347,
+      "sourceId": 18,
+      "sourceName": "层层设防1"
+    },
+    {
+      "levelId": 348,
+      "sourceId": 394,
+      "sourceName": "披甲持螯"
+    },
+    {
+      "levelId": 349,
+      "sourceId": 49,
+      "sourceName": "小燕出巢"
+    },
+    {
+      "levelId": 350,
+      "sourceId": 22,
+      "sourceName": "瓮中之鳖"
+    },
+    {
+      "levelId": 351,
+      "sourceId": 31,
+      "sourceName": "二横最难解的布局"
+    },
+    {
+      "levelId": 352,
+      "sourceId": 273,
+      "sourceName": "异位同步(上)"
+    },
+    {
+      "levelId": 353,
+      "sourceId": 274,
+      "sourceName": "异位同步(下)"
+    },
+    {
+      "levelId": 354,
+      "sourceId": 100,
+      "sourceName": "離而不坎"
+    },
+    {
+      "levelId": 355,
+      "sourceId": 59,
+      "sourceName": "近在咫尺3"
+    },
+    {
+      "levelId": 356,
+      "sourceId": 54,
+      "sourceName": "近在咫尺2"
+    },
+    {
+      "levelId": 357,
+      "sourceId": 393,
+      "sourceName": "寄人籬下"
+    },
+    {
+      "levelId": 358,
+      "sourceId": 90,
+      "sourceName": "数字系列:6"
+    },
+    {
+      "levelId": 359,
+      "sourceId": 337,
+      "sourceName": "字母系列I"
+    },
+    {
+      "levelId": 360,
+      "sourceId": 363,
+      "sourceName": "分久必合"
+    },
+    {
+      "levelId": 361,
+      "sourceId": 99,
+      "sourceName": "花車"
+    },
+    {
+      "levelId": 362,
+      "sourceId": 392,
+      "sourceName": "野馬分鬃"
+    },
+    {
+      "levelId": 363,
+      "sourceId": 257,
+      "sourceName": "7系列:步履维艰"
+    },
+    {
+      "levelId": 364,
+      "sourceId": 109,
+      "sourceName": "陳兵西陲"
+    },
+    {
+      "levelId": 365,
+      "sourceId": 111,
+      "sourceName": "山在虛無縹緲間"
+    },
+    {
+      "levelId": 366,
+      "sourceId": 110,
+      "sourceName": "水滸聚義"
+    },
+    {
+      "levelId": 367,
+      "sourceId": 320,
+      "sourceName": "将士一心"
+    },
+    {
+      "levelId": 368,
+      "sourceId": 171,
+      "sourceName": "伏羲八卦:山雷颐"
+    },
+    {
+      "levelId": 369,
+      "sourceId": 391,
+      "sourceName": "運兵陰平"
+    },
+    {
+      "levelId": 370,
+      "sourceId": 127,
+      "sourceName": "拳头"
+    },
+    {
+      "levelId": 371,
+      "sourceId": 70,
+      "sourceName": "小汽车"
+    },
+    {
+      "levelId": 372,
+      "sourceId": 98,
+      "sourceName": "馮京馬涼2"
+    },
+    {
+      "levelId": 373,
+      "sourceId": 390,
+      "sourceName": "流水行雲"
+    },
+    {
+      "levelId": 374,
+      "sourceId": 71,
+      "sourceName": "单身的小兵"
+    },
+    {
+      "levelId": 375,
+      "sourceId": 389,
+      "sourceName": "三一奇阵"
+    },
+    {
+      "levelId": 376,
+      "sourceId": 62,
+      "sourceName": "前后夹攻"
+    },
+    {
+      "levelId": 377,
+      "sourceId": 267,
+      "sourceName": "曹冲称象"
+    },
+    {
+      "levelId": 378,
+      "sourceId": 335,
+      "sourceName": "字母系列F"
+    },
+    {
+      "levelId": 379,
+      "sourceId": 227,
+      "sourceName": "生机盎然"
+    },
+    {
+      "levelId": 380,
+      "sourceId": 338,
+      "sourceName": "字母系列L"
+    },
+    {
+      "levelId": 381,
+      "sourceId": 258,
+      "sourceName": "7系列:自动报时"
+    },
+    {
+      "levelId": 382,
+      "sourceId": 19,
+      "sourceName": "层层设防2"
+    },
+    {
+      "levelId": 383,
+      "sourceId": 33,
+      "sourceName": "三横最难解的布局"
+    },
+    {
+      "levelId": 384,
+      "sourceId": 89,
+      "sourceName": "数字系列:5"
+    },
+    {
+      "levelId": 385,
+      "sourceId": 86,
+      "sourceName": "数字系列:2"
+    },
+    {
+      "levelId": 386,
+      "sourceId": 97,
+      "sourceName": "馮京馬涼"
+    },
+    {
+      "levelId": 387,
+      "sourceId": 291,
+      "sourceName": "坦克"
+    },
+    {
+      "levelId": 388,
+      "sourceId": 96,
+      "sourceName": "瓊瑤敲碎"
+    },
+    {
+      "levelId": 389,
+      "sourceId": 334,
+      "sourceName": "字母系列C"
+    },
+    {
+      "levelId": 390,
+      "sourceId": 340,
+      "sourceName": "字母系列P"
+    },
+    {
+      "levelId": 391,
+      "sourceId": 91,
+      "sourceName": "数字系列:7"
+    },
+    {
+      "levelId": 392,
+      "sourceId": 87,
+      "sourceName": "数字系列:3"
+    },
+    {
+      "levelId": 393,
+      "sourceId": 79,
+      "sourceName": "虚与委蛇2"
+    },
+    {
+      "levelId": 394,
+      "sourceId": 93,
+      "sourceName": "数字系列:9"
+    },
+    {
+      "levelId": 395,
+      "sourceId": 78,
+      "sourceName": "虚与委蛇"
+    },
+    {
+      "levelId": 396,
+      "sourceId": 342,
+      "sourceName": "字母系列U"
+    },
+    {
+      "levelId": 397,
+      "sourceId": 85,
+      "sourceName": "数字系列:1"
+    },
+    {
+      "levelId": 398,
+      "sourceId": 240,
+      "sourceName": "百步穿杨"
+    },
+    {
+      "levelId": 399,
+      "sourceId": 88,
+      "sourceName": "数字系列:4"
+    },
+    {
+      "levelId": 400,
+      "sourceId": 336,
+      "sourceName": "字母系列H"
+    },
+    {
+      "levelId": 401,
+      "sourceId": 339,
+      "sourceName": "字母系列N"
+    },
+    {
+      "levelId": 402,
+      "sourceId": 124,
+      "sourceName": "數字系列4-2"
+    },
+    {
+      "levelId": 403,
+      "sourceId": 61,
+      "sourceName": "小兵探路"
+    },
+    {
+      "levelId": 404,
+      "sourceId": 333,
+      "sourceName": "字母糸列A"
+    },
+    {
+      "levelId": 405,
+      "sourceId": 341,
+      "sourceName": "字母系列T"
+    },
+    {
+      "levelId": 406,
+      "sourceId": 55,
+      "sourceName": "峰回路转"
+    }
+  ]
+}

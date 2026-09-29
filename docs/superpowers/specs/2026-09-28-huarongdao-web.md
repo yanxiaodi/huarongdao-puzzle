@@ -24,7 +24,8 @@
 
 - 棋盘 4 列 × 5 行；曹操到达 x=1、y=3 时通关。
 - 每个 Level 声明 targetPieceId；胜利判定接收 Level 上下文，按目标棋子的 ID 和 2×2 尺寸检查出口，不依赖隐含硬编码 ID。
-- 棋子沿允许的轴向移动，不得越界或重叠。核心 applyMove 必须拒绝非有限数、非正数或非整数 distance；多格移动按方向逐格检查所有中间位置和终点，任一格出界或碰撞即拒绝，不能越过阻挡棋子；非法命令不改变局面，也不计步。Web 版一次成功的连续拖动计一步。
+- 旧版所有棋子均可沿水平或垂直方向滑动；棋子宽高描述占格形状，不限制可移动轴。
+- 棋子不得越界或重叠。核心 applyMove 必须拒绝非有限数、非正数或非整数 distance；多格移动按方向逐格检查所有中间位置和终点，任一格出界或碰撞即拒绝，不能越过阻挡棋子；非法命令不改变局面，也不计步。Web 版一次成功的连续拖动计一步。
 - 难度编号 0–6。旧版当前难度通关数达到 ceil(该档关卡总数 × 60%) 后开放下一档。
 - 评分意图：steps / MinSteps ≤ 1.5 得 3 星，≤ 3 得 2 星，否则 1 星。旧代码两个整数相除后再赋给 double，会截断比例；Web 版采用浮点计算并保留阈值。
 - 旧关卡数据中没有解法，需要单独生成和校验。
@@ -121,7 +122,7 @@ GameSnapshot 是游戏状态唯一事实来源，使用 levelId 引用当前关�
 
 ## 数据迁移
 
-从本地 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留关卡 ID、名称、难度、MinSteps、目标棋子 ID 和棋子初始位置。导入脚本接收显式输入路径；生成的 public/data/levels.json 纳入版本控制，正常构建只读取该 JSON，不要求 reference 文件存在。docs/legacy-level-data.md 记录本地 XML 的提供方式与再生成命令。导入时检查总数、ID 唯一性、targetPieceId 引用及 2×2 尺寸、minSteps 为有限正整数、棋子类型、边界、占格冲突和难度分布；错误报告关卡 ID 与字段，并阻止产物生成。每关生成一条可验证解法；旧 Windows Phone 存档不自动导入。
+从本地 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留运行时关卡 ID、简体/繁体/英文名称、难度、MinSteps、目标棋子 ID 和棋子初始位置。LevelInitialID 与原始标题只写入独立的 docs/legacy-level-mapping.json，不进入运行时 schema。导入脚本要求显式输入和输出路径；生成的 public/data/levels.json 纳入版本控制，正常构建只读取该 JSON，不要求 reference 文件存在。docs/legacy-level-data.md 记录本地 XML 的提供方式与再生成命令；scripts/level-titles.en.json 保存人工整理的英文标题，OpenCC 用于简繁规范化。导入时检查总数、运行时与来源 ID 唯一性、targetPieceId 引用及 2×2 尺寸、minSteps 为有限正整数、棋子类型、边界、占格冲突和历史难度分布；错误报告关卡 ID 与字段，并阻止产物生成。每关生成一条可验证解法；旧 Windows Phone 存档不自动导入。
 
 ## 多语言支持
 

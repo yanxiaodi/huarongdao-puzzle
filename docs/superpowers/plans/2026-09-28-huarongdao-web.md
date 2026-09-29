@@ -96,9 +96,12 @@ function saveLocalePreference(locale: AppLocale): void;
 
 **Files:**
 - Create: scripts/import-levels.ts
+- Create: scripts/level-titles.en.json
+- Modify: package.json, package-lock.json
 - Create: src/data/levelSchema.ts
 - Create: public/data/levels.json
 - Create: docs/legacy-level-data.md
+- Create: docs/legacy-level-mapping.json (optional importer output; archival only)
 - Read: reference/HRD/HRD/HRD/AllLevels.xml
 
 **Interfaces:**
@@ -115,19 +118,19 @@ type Piece = {
 type Level = {
   id: number;
   targetPieceId: string;
-  name: string;
+  names: Record<"zh-CN" | "zh-Hant" | "en", string>;
   difficulty: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   minSteps: number;
   pieces: Piece[];
 };
 ~~~
 
-- [ ] 转换脚本要求显式传入 --input 和 --output；reference XML 只用于开发者手动再生成数据。
-- [ ] 定义稳定棋子 ID、位置、宽高和允许移动轴的数据结构。
-- [ ] 检查关卡数量、ID 唯一性、targetPieceId 引用有效且尺寸为 2×2、minSteps 为有限正整数、棋子类型、棋盘边界、占格冲突和难度分布；错误报告关卡 ID、字段和原因。
-- [ ] 出错时报告关卡 ID、字段和原因；成功后生成有版本号的 JSON。
-- [ ] 在 docs/legacy-level-data.md 说明本地 XML 的放置/传入方式和再生成命令；构建只读取已跟踪的 public/data/levels.json。
-- [ ] 对照首关、末关和每档边界关卡，人工核对 ID、MinSteps、位置及难度。
+- [x] 转换脚本要求显式传入 --input 和 --output；reference XML 只用于开发者手动再生成数据。
+- [x] 定义稳定棋子 ID、位置、宽高和允许移动轴的数据结构；关卡名称保存为简体、繁体和英文三种文本。
+- [x] 检查关卡数量、ID 唯一性、targetPieceId 引用有效且尺寸为 2×2、minSteps 为有限正整数、棋子类型、棋盘边界、占格冲突和难度分布；错误报告关卡 ID、字段和原因。
+- [x] 出错时报告关卡 ID、字段和原因；成功后生成有版本号的 JSON。
+- [x] 在 docs/legacy-level-data.md 说明本地 XML 的放置/传入方式和再生成命令；构建只读取已跟踪的 public/data/levels.json。
+- [x] 对照首关、末关和每档边界关卡，人工核对 ID、MinSteps、位置及难度。
 
 **Deliverable:** 可重复生成、内容可审阅并通过结构校验的 406 关数据。
 
