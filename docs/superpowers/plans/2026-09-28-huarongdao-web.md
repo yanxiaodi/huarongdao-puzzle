@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. The checklist below tracks implementation progress.
 
-**Goal:** 将 406 关旧版华容道做成 Phaser 响应式 Web 游戏，并提供可逐步播放的本地解法。
+**Goal:** 将 406 关旧版华容道做成支持简体中文、繁体中文和英文的 Phaser 响应式 Web 游戏，并提供可逐步播放的本地解法。
 
-**Architecture:** React 负责网页菜单、HUD 和弹层；Phaser 绘制棋盘并处理游戏内交互。纯 TypeScript 规则和状态是单一事实来源；进度与解法先由本地浏览器存储/静态数据提供，解法授权策略独立。
+**Architecture:** React 负责网页菜单、HUD 和弹层，并通过 i18next 管理界面语言；Phaser 绘制棋盘并处理游戏内交互。纯 TypeScript 规则和状态是单一事实来源；语言偏好与进度保存在本地，解法先由静态数据提供，访问策略独立。
 
-**Tech Stack:** Vite、TypeScript、React、Phaser、LocalStorage、XML 解析依赖；实施时选用稳定版本并提交 lockfile。
+**Tech Stack:** Vite、TypeScript、React、Phaser、i18next、react-i18next、LocalStorage、XML 解析依赖；实施时选用稳定版本并提交 lockfile。
 
 **Spec:** docs/superpowers/specs/2026-09-28-huarongdao-web.md
 
@@ -16,6 +16,8 @@
 - 迁移 406 关，难度 0–6；通关当前档 ceil(60%) 后开放下一档。
 - 一次成功连续拖动计一步；浮点评分阈值为 1.5 和 3。
 - 首版有解法查看与播放，不实现购买、支付后端或账号。
+- 支持 `zh-CN`、`zh-Hant`、`en`；语言偏好优先于浏览器语言，最终回退 `zh-CN`。
+- 即时切换语言不重载页面、不重建 Phaser 实例、不丢失棋局。
 - 解法播放使用独立只读状态；退出不能覆盖玩家局面或撤销历史。
 - reference/HRD 只作本地参考；任何实现步骤都不得暂存或提交该目录。
 
@@ -26,6 +28,7 @@
 - 缺失、损坏或版本未知的 LocalStorage 存档必须回退到可玩的新局面。
 - 解法数据缺失时显示 unavailable，访问受限时显示 locked；含非法移动的播放进入 invalid 并停止，玩家局面不变。
 - 开启 prefers-reduced-motion 后减少动效，棋盘操作仍可用。
+- 非法或未知语言偏好安全回退；三种语言的较长文案在窄屏下仍可读。
 
 ---
 
@@ -49,16 +52,47 @@
 - PhaserHost 接收棋盘快照与动作回调，不拥有规则或存档。
 - App 管理首页、关卡选择和游戏页的顶层页面状态。
 
-- [ ] 初始化 Vite React TypeScript 工程，安装 Phaser 与 XML 转换依赖。
-- [ ] 创建 React 入口、App 页面壳和全局主题 token。
-- [ ] PhaserHost 创建/销毁 Phaser 实例，避免热重载重复画布。
-- [ ] 建立 BootScene 和空 PuzzleScene，按窗口尺寸绘制比例正确的 4×5 棋盘框。
-- [ ] 添加忽略构建产物和依赖目录的 .gitignore；reference 不加入构建输入。
-- [ ] 手动打开开发页，确认页面、画布和窗口缩放正常。
+- [x] 初始化 Vite React TypeScript 工程，安装 Phaser 与 XML 转换依赖。
+- [x] 创建 React 入口、App 页面壳和全局主题 token。
+- [x] PhaserHost 创建/销毁 Phaser 实例，避免热重载重复画布。
+- [x] 建立 BootScene 和空 PuzzleScene，按窗口尺寸绘制比例正确的 4×5 棋盘框。
+- [x] 添加忽略构建产物和依赖目录的 .gitignore；reference 不加入构建输入。
+- [x] 手动打开开发页，确认页面、画布和窗口缩放正常。
 
 **Deliverable:** 可启动的 Web 游戏空壳，不改动旧项目副本。
 
-### Task 2: 导入并校验关卡数据
+### Task 2: 加入多语言与语言切换
+
+**Files:**
+- Create: `src/i18n/types.ts`
+- Create: `src/i18n/resources.ts`
+- Create: `src/i18n/languagePreference.ts`
+- Create: `src/i18n/index.ts`
+- Create: `src/i18n/i18next.d.ts`
+- Modify: `package.json`, `package-lock.json`
+- Modify: `src/main.tsx`
+- Modify: `src/app/App.tsx`, `src/app/theme.css`, `src/game/PhaserHost.tsx`
+
+**Interfaces:**
+~~~ts
+type AppLocale = "zh-CN" | "zh-Hant" | "en";
+function getInitialLocale(): AppLocale;
+function saveLocalePreference(locale: AppLocale): void;
+~~~
+
+- [x] 安装 `i18next` 与 `react-i18next`，锁定解析后的依赖版本。
+- [x] 建立三份结构一致、按页面分组的 TypeScript 翻译资源；提供类型化 `t()` key、变量插值和数量复数消息。
+- [x] 初始语言按 localStorage 偏好、浏览器语言、`zh-CN` 回退顺序解析；将 `zh-TW`、`zh-HK`、`zh-MO`、`zh-Hant` 归一为 `zh-Hant`，将其他 `zh-*` 归一为 `zh-CN`。
+- [x] 在 React 首次渲染前初始化 i18next；语言变化时更新 `<html lang>`、页面标题和描述元数据。
+- [x] 翻译首页、选关页、棋局页、导航、画布无障碍名称和加载提示中的所有用户可读文字。
+- [x] 在页头加入可访问的简中/繁中/英文切换控件，标明选中项并保存手动选择。
+- [x] 语言变化仅重绘 React 文案；PhaserHost 继续持有原游戏实例，画布文字的语言事件在画布内容进入后接入。
+- [x] 执行 `npm run build`，确认 TypeScript 检查和 Vite 构建通过。
+- [ ] 手动浏览三页切换三种语言，刷新确认语言偏好恢复，并确认棋盘视图在切换前后保留。
+
+**Deliverable:** 首页、选关页、棋局页和页面元数据均可在三种语言间即时切换并持久保存语言偏好。
+
+### Task 3: 导入并校验关卡数据
 
 **Files:**
 - Create: scripts/import-levels.ts
@@ -97,7 +131,7 @@ type Level = {
 
 **Deliverable:** 可重复生成、内容可审阅并通过结构校验的 406 关数据。
 
-### Task 3: 实现规则、计步、评分与解锁
+### Task 4: 实现规则、计步、评分与解锁
 
 **Files:**
 - Create: src/game/domain/types.ts
@@ -150,7 +184,7 @@ interface GameStore {
 
 **Deliverable:** 可独立使用的规则模块，移动、计步、胜利、评分与解锁行为明确。
 
-### Task 4: 实现 Phaser 棋盘与拖动
+### Task 5: 实现 Phaser 棋盘与拖动
 
 **Files:**
 - Modify: src/game/scenes/PuzzleScene.ts
@@ -169,7 +203,7 @@ interface GameStore {
 
 **Deliverable:** 一关可以完整游玩的 Phaser 棋盘。
 
-### Task 5: 加入页面流程与本地进度
+### Task 6: 加入页面流程与本地进度
 
 **Files:**
 - Create: src/ui/HomeScreen.tsx
@@ -185,7 +219,7 @@ interface GameStore {
 - ProgressStore 读取并保存当前局面、步数、撤销历史、每关最高星级、收藏和设置。
 
 ~~~ts
-type UserSettings = { soundEnabled: boolean };
+type UserSettings = { soundEnabled: boolean; locale: AppLocale };
 
 type ProgressSnapshot = {
   schemaVersion: 1;
@@ -217,7 +251,7 @@ interface ProgressStore {
 
 **Deliverable:** 从选择关卡到通关的完整本地游戏流程。
 
-### Task 6: 加入解法数据接口与播放器
+### Task 7: 加入解法数据接口与播放器
 
 **Files:**
 - Create: src/solutions/types.ts
@@ -277,7 +311,7 @@ interface SolutionPlayback {
 
 **Deliverable:** 所有关卡有可播放的有效解法；以后可以替换访问策略接入购买授权。
 
-### Task 7: 完成视觉、键盘与响应式润色
+### Task 8: 完成视觉、键盘与响应式润色
 
 **Files:**
 - Modify: src/app/theme.css
@@ -296,4 +330,4 @@ interface SolutionPlayback {
 
 ## 验收顺序
 
-按设计说明“首版验收条件”逐项手工核对，并确认 reference/ 未暂存且未被打包进 Web 资源。本计划本身不修改源码、不运行测试或构建、不创建提交。
+先完成多语言任务并按任务内步骤验证三种语言、偏好持久化、页面元数据、棋盘保持和窄屏布局；再按设计说明“首版验收条件”逐项手工核对，并确认 reference/ 未暂存且未被打包进 Web 资源。
