@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { saveLocalePreference } from "../i18n/languagePreference";
 import { isAppLocale, LANGUAGE_OPTIONS, type AppLocale } from "../i18n/types";
@@ -122,9 +122,9 @@ export function App() {
               </button>
             </div>
             <div className="home-facts">
-              <span><strong>406</strong> {t("home.levelsLabel", { count: 406 })}</span>
+              <span><Trans i18nKey="home.levelsLabel" count={406} components={{ count: <strong /> }} /></span>
               <span className="fact-divider" />
-              <span><strong>7</strong> {t("home.difficultyLabel", { count: 7 })}</span>
+              <span><Trans i18nKey="home.difficultyLabel" count={7} components={{ count: <strong /> }} /></span>
             </div>
           </div>
 

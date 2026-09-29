@@ -4,8 +4,11 @@ const STORAGE_KEY = "huarongdao.locale";
 
 export function getInitialLocale(): AppLocale {
   const storedLocale = readStoredLocale();
-  if (storedLocale) {
-    return storedLocale;
+  if (storedLocale.status === "valid") {
+    return storedLocale.locale;
+  }
+  if (storedLocale.status === "invalid") {
+    return "zh-CN";
   }
 
   if (typeof navigator !== "undefined") {
@@ -31,15 +34,25 @@ export function saveLocalePreference(locale: AppLocale): void {
   }
 }
 
-function readStoredLocale(): AppLocale | undefined {
+type StoredLocale =
+  | { status: "missing" }
+  | { status: "valid"; locale: AppLocale }
+  | { status: "invalid" };
+
+function readStoredLocale(): StoredLocale {
   try {
     if (typeof window === "undefined") {
-      return undefined;
+      return { status: "missing" };
     }
 
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return normalizeLocale(stored ?? undefined);
+    if (stored === null) {
+      return { status: "missing" };
+    }
+
+    const locale = normalizeLocale(stored);
+    return locale ? { status: "valid", locale } : { status: "invalid" };
   } catch {
-    return undefined;
+    return { status: "missing" };
   }
 }
