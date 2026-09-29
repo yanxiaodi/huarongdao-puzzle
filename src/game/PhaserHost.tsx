@@ -3,7 +3,11 @@ import Phaser from "phaser";
 import { BootScene } from "./scenes/BootScene";
 import { PuzzleScene } from "./scenes/PuzzleScene";
 
-export function PhaserHost() {
+type PhaserHostProps = {
+  ariaLabel: string;
+};
+
+export function PhaserHost({ ariaLabel }: PhaserHostProps) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +43,8 @@ export function PhaserHost() {
 
   return (
     <div
-      aria-label="4列5行华容道棋盘画布"
+      aria-label={ariaLabel}
+      role="group"
       className="phaser-host"
       ref={mountRef}
     />

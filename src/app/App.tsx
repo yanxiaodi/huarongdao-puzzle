@@ -1,4 +1,8 @@
 import { lazy, Suspense, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
+import { saveLocalePreference } from "../i18n/languagePreference";
+import { isAppLocale, LANGUAGE_OPTIONS, type AppLocale } from "../i18n/types";
 
 const PhaserHost = lazy(() =>
   import("../game/PhaserHost").then(({ PhaserHost: component }) => ({
@@ -8,34 +12,45 @@ const PhaserHost = lazy(() =>
 
 type Screen = "home" | "levels" | "game";
 
-const screenLabels: Record<Screen, string> = {
-  home: "首页",
-  levels: "选关",
-  game: "棋局",
+const screenTranslationKeys: Record<Screen, "navigation.home" | "navigation.levels" | "navigation.game"> = {
+  home: "navigation.home",
+  levels: "navigation.levels",
+  game: "navigation.game",
 };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>("home");
+  const { t } = useTranslation();
+  const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
+
+  function selectLocale(locale: AppLocale) {
+    if (locale === activeLocale) {
+      saveLocalePreference(locale);
+      return;
+    }
+
+    void i18n.changeLanguage(locale).then(() => saveLocalePreference(locale));
+  }
 
   return (
     <main className="app-shell">
       <header className="masthead">
         <button
-          aria-label="返回首页"
+          aria-label={t("navigation.returnHome")}
           className="brand"
           onClick={() => setScreen("home")}
           type="button"
         >
           <span aria-hidden="true" className="brand-mark">
-            華
+            {t("brand.mark")}
           </span>
           <span className="brand-copy">
-            <strong>华容道</strong>
-            <small>HUARONGDAO PUZZLE</small>
+            <strong>{t("brand.name")}</strong>
+            <small>{t("brand.subtitle")}</small>
           </span>
         </button>
 
-        <nav aria-label="主导航" className="main-nav">
+        <nav aria-label={t("navigation.label")} className="main-nav">
           {(["home", "levels", "game"] as const).map((item) => (
             <button
               aria-current={screen === item ? "page" : undefined}
@@ -44,15 +59,32 @@ export function App() {
               onClick={() => setScreen(item)}
               type="button"
             >
-              {screenLabels[item]}
+              {t(screenTranslationKeys[item])}
             </button>
           ))}
         </nav>
 
-        <span className="edition-chip">
-          <span aria-hidden="true" className="edition-dot" />
-          经典益智
-        </span>
+        <div className="masthead-tools">
+          <span className="edition-chip">
+            <span aria-hidden="true" className="edition-dot" />
+            {t("header.edition")}
+          </span>
+          <div aria-label={t("language.label")} className="language-switcher" role="group">
+            {LANGUAGE_OPTIONS.map((option) => (
+              <button
+                aria-label={option.label}
+                aria-pressed={activeLocale === option.locale}
+                className={activeLocale === option.locale ? "language-button language-button--active" : "language-button"}
+                key={option.locale}
+                onClick={() => selectLocale(option.locale)}
+                title={option.label}
+                type="button"
+              >
+                {option.shortLabel}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       {screen === "home" && (
@@ -60,17 +92,17 @@ export function App() {
           <div className="intro-copy">
             <p className="eyebrow">
               <span aria-hidden="true" className="eyebrow-rule" />
-              4 × 5 · 经典棋局
+              {t("home.eyebrow")}
             </p>
             <h1 id="home-title">
-              一局静心，
+              {t("home.titleFirst")}
               <br />
-              <span>方寸见天地。</span>
+              <span>{t("home.titleSecond")}</span>
             </h1>
             <p className="intro-description">
-              移开阻挡的棋子，为曹操打开出口。
+              {t("home.descriptionFirst")}
               <br />
-              想好每一步，棋路便会慢慢清晰。
+              {t("home.descriptionSecond")}
             </p>
             <div className="intro-actions">
               <button
@@ -78,7 +110,7 @@ export function App() {
                 onClick={() => setScreen("game")}
                 type="button"
               >
-                查看棋盘
+                {t("home.boardAction")}
                 <span aria-hidden="true">↗</span>
               </button>
               <button
@@ -86,13 +118,13 @@ export function App() {
                 onClick={() => setScreen("levels")}
                 type="button"
               >
-                浏览关卡
+                {t("home.levelsAction")}
               </button>
             </div>
             <div className="home-facts">
-              <span><strong>406</strong> 局待解</span>
+              <span><strong>406</strong> {t("home.levelsLabel", { count: 406 })}</span>
               <span className="fact-divider" />
-              <span><strong>7</strong> 个难度档</span>
+              <span><strong>7</strong> {t("home.difficultyLabel", { count: 7 })}</span>
             </div>
           </div>
 
@@ -100,9 +132,9 @@ export function App() {
             <div className="seal-orbit seal-orbit--outer" />
             <div className="seal-orbit seal-orbit--inner" />
             <div className="seal-center">
-              <span className="seal-kicker">移步换形</span>
-              <strong>曹</strong>
-              <span className="seal-caption">静候出口</span>
+              <span className="seal-kicker">{t("home.sealKicker")}</span>
+              <strong>{t("home.sealTitle")}</strong>
+              <span className="seal-caption">{t("home.sealCaption")}</span>
             </div>
             <span className="seal-spark seal-spark--one">✦</span>
             <span className="seal-spark seal-spark--two">✧</span>
@@ -115,18 +147,16 @@ export function App() {
           <div className="page-heading">
             <p className="eyebrow">
               <span aria-hidden="true" className="eyebrow-rule" />
-              关卡图鉴
+              {t("levels.eyebrow")}
             </p>
-            <h1 id="levels-title">选择一局棋。</h1>
-            <p className="intro-description">
-              406 个棋局分为七档难度，完成当前难度后逐步解锁。
-            </p>
+            <h1 id="levels-title">{t("levels.title")}</h1>
+            <p className="intro-description">{t("levels.description")}</p>
           </div>
           <div className="level-preview">
             <span aria-hidden="true" className="level-preview-icon">棋</span>
             <div>
-              <strong>关卡目录即将开放</strong>
-              <p>先从棋盘布局开始，关卡数据会接入旧版的 406 局。</p>
+              <strong>{t("levels.previewTitle")}</strong>
+              <p>{t("levels.previewDescription")}</p>
             </div>
           </div>
         </section>
@@ -138,37 +168,39 @@ export function App() {
             <div>
               <p className="eyebrow">
                 <span aria-hidden="true" className="eyebrow-rule" />
-                棋盘预览
+                {t("game.eyebrow")}
               </p>
-              <h1 id="game-title">让棋路慢慢打开。</h1>
+              <h1 id="game-title">{t("game.title")}</h1>
             </div>
-            <span className="board-size-chip">4 列 <i /> 5 行</span>
+            <span className="board-size-chip">
+              {t("game.columns")} <i /> {t("game.rows")}
+            </span>
           </div>
 
           <div className="board-card">
             <div className="board-card-top">
-              <span>经典布局</span>
-              <span className="board-index">第 <strong>001</strong> 局</span>
+              <span>{t("game.layout")}</span>
+              <span className="board-index">{t("game.levelNumber", { number: "001" })}</span>
             </div>
-            <Suspense fallback={<div aria-live="polite" className="phaser-loading">正在载入棋盘</div>}>
-            <PhaserHost />
-          </Suspense>
+            <Suspense fallback={<div aria-live="polite" className="phaser-loading">{t("game.loading")}</div>}>
+              <PhaserHost ariaLabel={t("game.boardLabel")} />
+            </Suspense>
             <div className="board-card-bottom">
-              <span><i aria-hidden="true" className="exit-mark" /> 出口在底部中央</span>
-              <span className="board-caption">静观局势 · 从容落子</span>
+              <span><i aria-hidden="true" className="exit-mark" /> {t("game.exit")}</span>
+              <span className="board-caption">{t("game.caption")}</span>
             </div>
           </div>
 
           <div className="play-note">
-            <span aria-hidden="true" className="note-symbol">一</span>
-            <p>棋盘舞台已经就位，接下来将接入关卡、移动规则与解法播放。</p>
+            <span aria-hidden="true" className="note-symbol">{t("game.noteSymbol")}</span>
+            <p>{t("game.note")}</p>
           </div>
         </section>
       )}
 
       <footer className="page-footer">
-        <span>移一步，见新局。</span>
-        <span>HUARONGDAO · 2026</span>
+        <span>{t("footer.tagline")}</span>
+        <span>{t("footer.copyright")}</span>
       </footer>
     </main>
   );
