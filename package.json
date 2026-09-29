@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "import:levels": "node --experimental-strip-types scripts/import-levels.ts"
   },
   "dependencies": {
     "i18next": "^26.4.2",
@@ -16,10 +17,12 @@
     "react-i18next": "^17.0.15"
   },
   "devDependencies": {
+    "@types/node": "^26.6.3",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
     "fast-xml-parser": "^5.2.5",
+    "opencc-js": "^1.4.2",
     "typescript": "~5.9.2",
     "vite": "^7.1.7"
   }

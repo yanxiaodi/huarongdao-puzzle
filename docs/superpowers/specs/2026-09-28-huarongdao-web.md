@@ -121,7 +121,7 @@ GameSnapshot 是游戏状态唯一事实来源，使用 levelId 引用当前关�
 
 ## 数据迁移
 
-从本地 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留关卡 ID、名称、难度、MinSteps、目标棋子 ID 和棋子初始位置。导入脚本接收显式输入路径；生成的 public/data/levels.json 纳入版本控制，正常构建只读取该 JSON，不要求 reference 文件存在。docs/legacy-level-data.md 记录本地 XML 的提供方式与再生成命令。导入时检查总数、ID 唯一性、targetPieceId 引用及 2×2 尺寸、minSteps 为有限正整数、棋子类型、边界、占格冲突和难度分布；错误报告关卡 ID 与字段，并阻止产物生成。每关生成一条可验证解法；旧 Windows Phone 存档不自动导入。
+从本地 reference/HRD/HRD/HRD/AllLevels.xml 转为有版本号的 JSON，保留运行时关卡 ID、简体/繁体/英文名称、难度、MinSteps、目标棋子 ID 和棋子初始位置。LevelInitialID 与原始标题只写入独立的 docs/legacy-level-mapping.json，不进入运行时 schema。导入脚本要求显式输入和输出路径；生成的 public/data/levels.json 纳入版本控制，正常构建只读取该 JSON，不要求 reference 文件存在。docs/legacy-level-data.md 记录本地 XML 的提供方式与再生成命令；scripts/level-titles.en.json 保存人工整理的英文标题，OpenCC 用于简繁规范化。导入时检查总数、运行时与来源 ID 唯一性、targetPieceId 引用及 2×2 尺寸、minSteps 为有限正整数、棋子类型、边界、占格冲突和历史难度分布；错误报告关卡 ID 与字段，并阻止产物生成。每关生成一条可验证解法；旧 Windows Phone 存档不自动导入。
 
 ## 多语言支持
 
