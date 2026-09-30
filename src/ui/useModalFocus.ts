@@ -81,7 +81,12 @@ export function useModalFocus(
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      const initialFocusTarget = dialog.querySelector<HTMLElement>("[data-modal-initial-focus]");
+      if (event.shiftKey && (
+        document.activeElement === first ||
+        document.activeElement === initialFocusTarget ||
+        !dialog.contains(document.activeElement)
+      )) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {

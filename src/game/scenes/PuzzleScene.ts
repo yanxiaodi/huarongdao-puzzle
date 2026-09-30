@@ -310,7 +310,8 @@ export class PuzzleScene extends Phaser.Scene {
 
   private renderSnapshot(snapshot: GameSnapshot, animate: boolean): void {
     if (!this.layout) return;
-    this.interactionLocked = animate || snapshot.status === "won";
+    const shouldAnimate = animate && !this.prefersReducedMotion();
+    this.interactionLocked = shouldAnimate || snapshot.status === "won";
 
     if (snapshot.status === "won") {
       this.pieceViews.forEach((view) => view.setInputEnabled(false));
@@ -331,13 +332,14 @@ export class PuzzleScene extends Phaser.Scene {
     for (const piece of this.options.level.pieces) {
       const view = this.pieceViews.get(piece.id);
       if (!view) continue;
+      this.tweens.killTweensOf(view.container);
+      if (snapshot.status === "playing") view.container.setAlpha(1);
       const destination = this.positionForPiece(piece.id, snapshot);
       const hasMoved =
         Math.abs(view.container.x - destination.x) > 0.5 ||
         Math.abs(view.container.y - destination.y) > 0.5;
 
-      if (!animate || !hasMoved) {
-        this.tweens.killTweensOf(view.container);
+      if (!shouldAnimate || !hasMoved) {
         view.setCenterPosition(destination.x, destination.y);
         continue;
       }
@@ -361,6 +363,10 @@ export class PuzzleScene extends Phaser.Scene {
 
   private playExitAnimation(): void {
     if (this.winAnimationPlayed || !this.layout) return;
+    if (this.prefersReducedMotion()) {
+      this.interactionLocked = false;
+      return;
+    }
     this.winAnimationPlayed = true;
     this.interactionLocked = true;
     const target = this.pieceViews.get(this.options.level.targetPieceId);
@@ -373,6 +379,11 @@ export class PuzzleScene extends Phaser.Scene {
       duration: 360,
       ease: "Cubic.In",
     });
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
   }
 
   private positionForPiece(

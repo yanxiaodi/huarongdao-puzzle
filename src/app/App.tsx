@@ -166,6 +166,7 @@ export function App() {
 
     const levelId = activeLevel.id;
     const persistElapsedTime = () => {
+      if (runTimer.current?.levelId !== levelId) return;
       const elapsedMs = pauseElapsedTimer(levelId);
       const snapshot = gameStore.getSnapshot();
       if (snapshot.status === "playing") progressStore.saveGame(snapshot, elapsedMs);

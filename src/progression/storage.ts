@@ -488,6 +488,7 @@ export class LocalProgressStore implements ProgressStore {
       this.storageError = null;
       return true;
     } catch (error) {
+      this.completionStorageReady = false;
       this.storageError = getStorageError(error);
       return false;
     }
