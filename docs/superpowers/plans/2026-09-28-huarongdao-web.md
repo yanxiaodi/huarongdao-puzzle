@@ -213,44 +213,70 @@ interface GameStore {
 - Create: src/ui/LevelSelectScreen.tsx
 - Create: src/ui/GameHud.tsx
 - Create: src/ui/WinDialog.tsx
+- Create: src/ui/CompletionHistoryDialog.tsx
+- Create: src/ui/ReplayScreen.tsx
 - Create: src/progression/progress.ts
 - Create: src/progression/storage.ts
+- Create: src/game/domain/MovePlayback.ts
 - Modify: src/app/App.tsx
 - Modify: src/app/theme.css
+- Modify: src/game/domain/types.ts, src/game/domain/GameStore.ts
+- Modify: src/game/PhaserHost.tsx, src/game/scenes/PuzzleScene.ts
+- Modify: src/data/levelCatalog.ts, src/i18n/resources.ts
 
 **Interfaces:**
-- ProgressStore 读取并保存当前局面、步数、撤销历史、每关最高星级、收藏和设置。
+- GameSnapshot 保存成功 MoveCommand 序列；moves、steps、undoStack 与 board 必须描述同一条合法路径。
+- ProgressStore 按关保存未通关局面、最高星级、收藏、设置和完整通关记录。
 
 ~~~ts
 type UserSettings = { soundEnabled: boolean; locale: AppLocale };
 
+type SavedGame = { snapshot: GameSnapshot; openedAt: string };
+
+type CompletionRecord = {
+  id: string;
+  levelId: number;
+  steps: number;
+  moves: MoveCommand[];
+  stars: 1 | 2 | 3;
+  completedAt: string;
+};
+
 type ProgressSnapshot = {
   schemaVersion: 1;
-  game: GameSnapshot | null;
+  gamesByLevel: Record<string, SavedGame>;
   bestStars: Record<number, 1 | 2 | 3>;
   favorites: number[];
+  completionRecords: CompletionRecord[];
   settings: UserSettings;
 };
 
 interface ProgressStore {
   load(levels: ReadonlyMap<number, Level>): ProgressSnapshot;
-  save(snapshot: ProgressSnapshot): void;
+  getSnapshot(): ProgressSnapshot;
+  getMostRecentUnfinishedLevelId(): number | null;
+  openLevel(level: Level): GameSnapshot;
+  saveGame(snapshot: GameSnapshot): void;
+  recordWin(snapshot: GameSnapshot, level: Level): CompletionRecord;
   toggleFavorite(levelId: number): void;
-  recordWin(levelId: number, stars: 1 | 2 | 3): void;
+  deleteCompletionRecord(recordId: string): void;
   updateSettings(settings: UserSettings): void;
 }
 ~~~
 - LevelSelectScreen 通过 ProgressStore 展示锁定状态和解锁进度。
 
-- [ ] 实现继续游戏、难度/关卡选择、收藏、撤销、重开和通关弹层。
-- [ ] ProgressStore.load 将 LocalStorage JSON 当作 unknown，使用当前已发布关卡目录校验 schemaVersion、设置、成绩和收藏字段；game.levelId 必须能解析到目录中的 canonical Level。
-- [ ] 校验当前 board 与 undoStack 每个棋盘的棋子 ID 集合、整数坐标、棋盘边界和占格；steps 必须为非负整数，undoStack 与步数及当前棋盘组成合法连续历史。任一字段失败就丢弃整个存档，回退到可玩的默认进度，不做部分恢复。
-- [ ] GameStore.restore(snapshot, canonicalLevel) 再校验关卡 ID 与棋盘状态；失败返回 false，不装入部分状态，调用方改用默认新局面。
-- [ ] 开始新关、撤销和重开时更新完整 GameSnapshot。
-- [ ] 订阅已提交状态变化：成功移动、撤销、重开、开始关卡和通关后保存 GameSnapshot；收藏、成绩与设置变化写回同一版本化 ProgressSnapshot。
-- [ ] 存档损坏或版本未知时退回可玩的默认进度。
-- [ ] 只用更高星级覆盖已有成绩；完成当前档 ceil(60%) 后开放下一档。
-- [ ] 手动验证刷新续玩、撤销、重开、收藏、锁定状态和下一关流程。
+- [x] 首页主操作按进度显示“继续最近打开的未通关关卡”或“开始第 1 关”；每关单独保留未通关局面。
+- [x] 展示全部 406 关和七档难度；显示锁定状态、解锁进度、收藏、最佳星级与该关历史入口。
+- [x] 接入撤销、条件确认重开、通关弹层与手动进入下一关。
+- [x] GameSnapshot 记录每次成功移动的 MoveCommand；撤销同步移除命令，重开清空命令序列。
+- [x] 每次通关保存步数、完整成功走法、本次星级与通关时间；不设应用内历史条数上限，按步数升序、时间降序排列。
+- [x] 每关历史可回放与确认删除；删除回放不降低最佳星级或解锁进度；通关弹层可直接回放刚完成的一局。
+- [x] 回放独立使用 canonical 初始棋盘并在进入时暂停；支持播放/暂停、逐步前进/后退，沿用旧版 1500ms 起步、每次调整 200ms、最短 200ms 的速度。
+- [x] ProgressStore.load 将 LocalStorage JSON 当作 unknown，按当前已发布关卡目录校验 schemaVersion、设置、成绩、收藏、全部未通关局面和回放记录；无效时整体回退到可玩的默认进度。
+- [x] 校验棋盘、撤销历史和 MoveCommand 序列彼此连续且合法；回放必须从 canonical 初始局面合法到达胜利。
+- [x] 成功移动、撤销、重开、开始关卡、通关、收藏和设置变化均写入版本化进度；LocalStorage 写入失败时显示原因。
+- [x] 只用更高星级覆盖已有成绩；完成当前档 ceil(60%) 后开放下一档。
+- [ ] 手动验证刷新续玩、撤销、重开、收藏、锁定状态、通关记录排序/删除和回放控制。
 
 **Deliverable:** 从选择关卡到通关的完整本地游戏流程。
 

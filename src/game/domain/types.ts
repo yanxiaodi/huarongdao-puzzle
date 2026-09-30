@@ -21,6 +21,7 @@ export type GameSnapshot = {
   levelId: number;
   board: BoardState;
   steps: number;
+  moves: MoveCommand[];
   undoStack: BoardState[];
   status: "playing" | "won";
 };

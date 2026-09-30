@@ -24,6 +24,7 @@ type PuzzleSceneOptions = {
   level: Level;
   store: GameStore;
   pieceLabels: Record<PieceRoleId, string>;
+  readOnly?: boolean;
 };
 
 type BoardLayout = {
@@ -72,10 +73,14 @@ export class PuzzleScene extends Phaser.Scene {
         this.pieceLabels[piece.roleId],
       );
       this.pieceViews.set(piece.id, view);
-      view.container.on(
-        Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN,
-        (pointer: Phaser.Input.Pointer) => this.beginDrag(pointer, view),
-      );
+      if (this.options.readOnly) {
+        view.container.disableInteractive();
+      } else {
+        view.container.on(
+          Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN,
+          (pointer: Phaser.Input.Pointer) => this.beginDrag(pointer, view),
+        );
+      }
     }
 
     this.snapshot = this.options.store.getSnapshot();
@@ -104,6 +109,7 @@ export class PuzzleScene extends Phaser.Scene {
     if (
       !this.snapshot ||
       this.snapshot.status === "won" ||
+      this.options.readOnly ||
       this.interactionLocked ||
       this.drag !== null ||
       !this.layout

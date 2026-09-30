@@ -1,22 +1,39 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { saveLocalePreference } from "../i18n/languagePreference";
 import { TRANSLATIONS } from "../i18n/resources";
 import { isAppLocale, LANGUAGE_OPTIONS, type AppLocale } from "../i18n/types";
-import { loadLevelById } from "../data/levelCatalog";
+import { loadLevelCatalog } from "../data/levelCatalog";
 import type { Level } from "../data/levelSchema";
 import { InMemoryGameStore } from "../game/domain/GameStore";
+import { getDifficultyUnlockStatus } from "../game/domain/scoring";
+import type { GameSnapshot } from "../game/domain/types";
+import { CompletionHistoryDialog } from "../ui/CompletionHistoryDialog";
+import { GameHud } from "../ui/GameHud";
+import { HomeScreen } from "../ui/HomeScreen";
+import { LevelSelectScreen } from "../ui/LevelSelectScreen";
+import { ReplayScreen } from "../ui/ReplayScreen";
+import { WinDialog } from "../ui/WinDialog";
+import {
+  createBrowserProgressStore,
+  type ProgressStorageError,
+  type ProgressStore,
+} from "../progression/storage";
+import {
+  getCompletionRecordsForLevel,
+  type CompletionRecord,
+  type ProgressSnapshot,
+} from "../progression/progress";
 
 const PhaserHost = lazy(() =>
-  import("../game/PhaserHost").then(({ PhaserHost: component }) => ({
-    default: component,
-  })),
+  import("../game/PhaserHost").then(({ PhaserHost: component }) => ({ default: component })),
 );
 
-type Screen = "home" | "levels" | "game";
+type Screen = "home" | "levels" | "game" | "replay";
+type ReplayReturn = "history" | "game";
 
-const screenTranslationKeys: Record<Screen, "navigation.home" | "navigation.levels" | "navigation.game"> = {
+const screenTranslationKeys: Record<Exclude<Screen, "replay">, "navigation.home" | "navigation.levels" | "navigation.game"> = {
   home: "navigation.home",
   levels: "navigation.levels",
   game: "navigation.game",
@@ -24,38 +41,165 @@ const screenTranslationKeys: Record<Screen, "navigation.home" | "navigation.leve
 
 export function App() {
   const [screen, setScreen] = useState<Screen>("home");
-  const [defaultLevel, setDefaultLevel] = useState<Level | null>(null);
-  const [gameStore, setGameStore] = useState<InMemoryGameStore | null>(null);
+  const [levels, setLevels] = useState<readonly Level[]>([]);
+  const [progressStore, setProgressStore] = useState<ProgressStore | null>(null);
+  const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
+  const [storageError, setStorageError] = useState<ProgressStorageError | null>(null);
   const [levelLoadFailed, setLevelLoadFailed] = useState(false);
+  const [activeLevel, setActiveLevel] = useState<Level | null>(null);
+  const [gameStore, setGameStore] = useState<InMemoryGameStore | null>(null);
+  const [gameSnapshot, setGameSnapshot] = useState<GameSnapshot | null>(null);
+  const [winRecord, setWinRecord] = useState<CompletionRecord | null>(null);
+  const [historyLevelId, setHistoryLevelId] = useState<number | null>(null);
+  const [selectedReplay, setSelectedReplay] = useState<CompletionRecord | null>(null);
+  const [replayReturn, setReplayReturn] = useState<ReplayReturn>("history");
   const { t } = useTranslation();
   const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
   const pieceLabels = TRANSLATIONS[activeLocale].game.pieces;
+  const levelsById = useMemo(() => new Map(levels.map((level) => [level.id, level])), [levels]);
+  const completedLevelIds = useMemo(
+    () => Object.keys(progress?.bestStars ?? {}).map(Number),
+    [progress?.bestStars],
+  );
+  const selectedHistoryLevel = historyLevelId === null ? null : levelsById.get(historyLevelId) ?? null;
+  const selectedHistoryRecords = useMemo(
+    () => progress && historyLevelId !== null
+      ? getCompletionRecordsForLevel(progress, historyLevelId)
+      : [],
+    [progress, historyLevelId],
+  );
+  const replayLevel = selectedReplay ? levelsById.get(selectedReplay.levelId) ?? null : null;
+  const nextUnlockedLevel = useMemo(() => {
+    if (!activeLevel) return null;
+    return levels.find((level) =>
+      level.id > activeLevel.id &&
+      getDifficultyUnlockStatus(levels, completedLevelIds, level.difficulty).isUnlocked,
+    ) ?? null;
+  }, [activeLevel, levels, completedLevelIds]);
 
   useEffect(() => {
-    if (screen !== "game" || gameStore || levelLoadFailed) return undefined;
-
     let cancelled = false;
-    void loadLevelById(1).then((level) => {
+    void loadLevelCatalog().then((catalog) => {
       if (cancelled) return;
-      setDefaultLevel(level);
-      setGameStore(new InMemoryGameStore(level));
+      const levelMap = new Map(catalog.map((level) => [level.id, level]));
+      const localeAtLoad = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
+      const store = createBrowserProgressStore(localeAtLoad);
+      const initialProgress = store.load(levelMap);
+      setLevels(catalog);
+      setProgressStore(store);
+      setProgress(initialProgress);
+      setStorageError(store.getStorageError());
     }).catch(() => {
       if (!cancelled) setLevelLoadFailed(true);
     });
-
     return () => {
       cancelled = true;
     };
-  }, [screen, gameStore, levelLoadFailed]);
+  }, []);
 
-  function selectLocale(locale: AppLocale) {
+  useEffect(() => {
+    if (!progressStore) return undefined;
+    return progressStore.subscribe(() => {
+      setProgress(progressStore.getSnapshot());
+      setStorageError(progressStore.getStorageError());
+    });
+  }, [progressStore]);
+
+  useEffect(() => {
+    if (!gameStore || !activeLevel || !progressStore) return undefined;
+
+    let previousStatus = gameStore.getSnapshot().status;
+    const syncGame = () => {
+      const snapshot = gameStore.getSnapshot();
+      setGameSnapshot(snapshot);
+      if (snapshot.status === "won" && previousStatus !== "won") {
+        setWinRecord(progressStore.recordWin(snapshot, activeLevel));
+      } else if (snapshot.status === "playing") {
+        progressStore.saveGame(snapshot);
+      }
+      previousStatus = snapshot.status;
+    };
+
+    setGameSnapshot(gameStore.getSnapshot());
+    return gameStore.subscribe(syncGame);
+  }, [gameStore, activeLevel, progressStore]);
+
+  function isUnlocked(level: Level): boolean {
+    return getDifficultyUnlockStatus(levels, completedLevelIds, level.difficulty).isUnlocked;
+  }
+
+  function openLevel(levelId: number) {
+    if (!progressStore) return;
+    const level = levelsById.get(levelId);
+    if (!level || !isUnlocked(level)) return;
+
+    const savedSnapshot = progressStore.openLevel(level);
+    const nextStore = new InMemoryGameStore(level);
+    if (!nextStore.restore(savedSnapshot, level)) {
+      progressStore.saveGame(nextStore.getSnapshot());
+    }
+    setActiveLevel(level);
+    setGameStore(nextStore);
+    setGameSnapshot(nextStore.getSnapshot());
+    setWinRecord(null);
+    setScreen("game");
+  }
+
+  function continueGame() {
+    const levelId = progressStore?.getMostRecentUnfinishedLevelId() ?? 1;
+    openLevel(levelId);
+  }
+
+  function navigateTo(target: Exclude<Screen, "replay">) {
+    if (target === "game") {
+      if (activeLevel && gameStore) setScreen("game");
+      else continueGame();
+      return;
+    }
+    setHistoryLevelId(null);
+    setScreen(target);
+  }
+
+  function changeLocale(locale: AppLocale) {
     if (locale === activeLocale) {
       saveLocalePreference(locale);
+      if (progressStore) {
+        progressStore.updateSettings({ ...progressStore.getSnapshot().settings, locale });
+      }
       return;
     }
 
-    void i18n.changeLanguage(locale).then(() => saveLocalePreference(locale));
+    void i18n.changeLanguage(locale).then(() => {
+      saveLocalePreference(locale);
+      if (progressStore) {
+        progressStore.updateSettings({ ...progressStore.getSnapshot().settings, locale });
+      }
+    });
   }
+
+  function openHistory(levelId: number) {
+    setHistoryLevelId(levelId);
+  }
+
+  function startReplay(record: CompletionRecord, from: ReplayReturn) {
+    setSelectedReplay(record);
+    setReplayReturn(from);
+    setScreen("replay");
+  }
+
+  function exitReplay() {
+    setSelectedReplay(null);
+    setScreen(replayReturn === "game" ? "game" : "levels");
+  }
+
+  function storageErrorMessage(): string | null {
+    if (storageError === "quota") return t("storage.quota");
+    if (storageError === "unavailable") return t("storage.unavailable");
+    if (storageError === "write-failed") return t("storage.writeFailed");
+    return null;
+  }
+
+  const currentStorageError = storageErrorMessage();
 
   return (
     <main className="app-shell">
@@ -63,12 +207,10 @@ export function App() {
         <button
           aria-label={t("navigation.returnHome")}
           className="brand"
-          onClick={() => setScreen("home")}
+          onClick={() => navigateTo("home")}
           type="button"
         >
-          <span aria-hidden="true" className="brand-mark">
-            {t("brand.mark")}
-          </span>
+          <span aria-hidden="true" className="brand-mark">{t("brand.mark")}</span>
           <span className="brand-copy">
             <strong>{t("brand.name")}</strong>
             <small>{t("brand.subtitle")}</small>
@@ -76,17 +218,20 @@ export function App() {
         </button>
 
         <nav aria-label={t("navigation.label")} className="main-nav">
-          {(["home", "levels", "game"] as const).map((item) => (
-            <button
-              aria-current={screen === item ? "page" : undefined}
-              className={screen === item ? "nav-link nav-link--active" : "nav-link"}
-              key={item}
-              onClick={() => setScreen(item)}
-              type="button"
-            >
-              {t(screenTranslationKeys[item])}
-            </button>
-          ))}
+          {(["home", "levels", "game"] as const).map((item) => {
+            const current = screen === item || (screen === "replay" && item === "game");
+            return (
+              <button
+                aria-current={current ? "page" : undefined}
+                className={current ? "nav-link nav-link--active" : "nav-link"}
+                key={item}
+                onClick={() => navigateTo(item)}
+                type="button"
+              >
+                {t(screenTranslationKeys[item])}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="masthead-tools">
@@ -101,7 +246,7 @@ export function App() {
                 aria-pressed={activeLocale === option.locale}
                 className={activeLocale === option.locale ? "language-button language-button--active" : "language-button"}
                 key={option.locale}
-                onClick={() => selectLocale(option.locale)}
+                onClick={() => changeLocale(option.locale)}
                 title={option.label}
                 type="button"
               >
@@ -112,126 +257,99 @@ export function App() {
         </div>
       </header>
 
+      {currentStorageError && <p className="storage-notice" role="status">{currentStorageError}</p>}
+      {levelLoadFailed && <p className="inline-error" role="alert">{t("levels.loadError")}</p>}
+
       {screen === "home" && (
-        <section aria-labelledby="home-title" className="home-layout">
-          <div className="intro-copy">
-            <p className="eyebrow">
-              <span aria-hidden="true" className="eyebrow-rule" />
-              {t("home.eyebrow")}
-            </p>
-            <h1 id="home-title">
-              {t("home.titleFirst")}
-              <br />
-              <span>{t("home.titleSecond")}</span>
-            </h1>
-            <p className="intro-description">
-              {t("home.descriptionFirst")}
-              <br />
-              {t("home.descriptionSecond")}
-            </p>
-            <div className="intro-actions">
-              <button
-                className="button button--primary"
-                onClick={() => setScreen("game")}
-                type="button"
-              >
-                {t("home.boardAction")}
-                <span aria-hidden="true">↗</span>
-              </button>
-              <button
-                className="button button--quiet"
-                onClick={() => setScreen("levels")}
-                type="button"
-              >
-                {t("home.levelsAction")}
-              </button>
-            </div>
-            <div className="home-facts">
-              <span><Trans i18nKey="home.levelsLabel" count={406} components={{ count: <strong /> }} /></span>
-              <span className="fact-divider" />
-              <span><Trans i18nKey="home.difficultyLabel" count={7} components={{ count: <strong /> }} /></span>
-            </div>
-          </div>
-
-          <div aria-hidden="true" className="hero-seal">
-            <div className="seal-orbit seal-orbit--outer" />
-            <div className="seal-orbit seal-orbit--inner" />
-            <div className="seal-center">
-              <span className="seal-kicker">{t("home.sealKicker")}</span>
-              <strong>{t("home.sealTitle")}</strong>
-              <span className="seal-caption">{t("home.sealCaption")}</span>
-            </div>
-            <span className="seal-spark seal-spark--one">✦</span>
-            <span className="seal-spark seal-spark--two">✧</span>
-          </div>
-        </section>
+        <HomeScreen
+          ready={progressStore !== null}
+          hasUnfinishedGame={Boolean(progress && Object.keys(progress.gamesByLevel).length > 0)}
+          onBrowseLevels={() => setScreen("levels")}
+          onContinue={continueGame}
+        />
       )}
 
-      {screen === "levels" && (
-        <section aria-labelledby="levels-title" className="content-page">
-          <div className="page-heading">
-            <p className="eyebrow">
-              <span aria-hidden="true" className="eyebrow-rule" />
-              {t("levels.eyebrow")}
-            </p>
-            <h1 id="levels-title">{t("levels.title")}</h1>
-            <p className="intro-description">{t("levels.description")}</p>
-          </div>
-          <div className="level-preview">
-            <span aria-hidden="true" className="level-preview-icon">棋</span>
-            <div>
-              <strong>{t("levels.previewTitle")}</strong>
-              <p>{t("levels.previewDescription")}</p>
-            </div>
-          </div>
-        </section>
+      {screen === "levels" && progress && (
+        <>
+          <LevelSelectScreen
+            levels={levels}
+            onOpenHistory={openHistory}
+            onSelectLevel={openLevel}
+            onToggleFavorite={(levelId) => progressStore?.toggleFavorite(levelId)}
+            progress={progress}
+          />
+          {selectedHistoryLevel && (
+            <CompletionHistoryDialog
+              level={selectedHistoryLevel}
+              onClose={() => setHistoryLevelId(null)}
+              onDelete={(recordId) => progressStore?.deleteCompletionRecord(recordId)}
+              onReplay={(record) => startReplay(record, "history")}
+              records={selectedHistoryRecords}
+            />
+          )}
+        </>
       )}
 
-      {screen === "game" && (
+      {screen === "game" && activeLevel && gameStore && gameSnapshot && (
         <section aria-labelledby="game-title" className="game-layout">
-          <div className="game-heading">
-            <div>
-              <p className="eyebrow">
-                <span aria-hidden="true" className="eyebrow-rule" />
-                {t("game.eyebrow")}
-              </p>
-              <h1 id="game-title">{t("game.title")}</h1>
-            </div>
-            <span className="board-size-chip">
-              {t("game.columns")} <i /> {t("game.rows")}
-            </span>
-          </div>
-
+          <GameHud
+            canUndo={gameSnapshot.steps > 0}
+            levelId={activeLevel.id}
+            levelName={activeLevel.names[activeLocale]}
+            locked={gameSnapshot.status === "won"}
+            onBackToLevels={() => navigateTo("levels")}
+            onRestart={() => gameStore.restart()}
+            onUndo={() => gameStore.undo()}
+            steps={gameSnapshot.steps}
+          />
           <div className="board-card">
             <div className="board-card-top">
               <span>{t("game.layout")}</span>
-              <span className="board-index">{t("game.levelNumber", { number: "001" })}</span>
+              <span className="board-index">{t("game.levelNumber", { number: String(activeLevel.id).padStart(3, "0") })}</span>
             </div>
             <Suspense fallback={<div aria-live="polite" className="phaser-loading">{t("game.loading")}</div>}>
-              {defaultLevel && gameStore ? (
-                <PhaserHost
-                  ariaLabel={t("game.boardLabel")}
-                  level={defaultLevel}
-                  store={gameStore}
-                  pieceLabels={pieceLabels}
-                />
-              ) : (
-                <div aria-live="polite" className="phaser-loading">
-                  {t(levelLoadFailed ? "game.loadError" : "game.loading")}
-                </div>
-              )}
+              <PhaserHost
+                ariaLabel={t("game.boardLabel")}
+                level={activeLevel}
+                pieceLabels={pieceLabels}
+                store={gameStore}
+              />
             </Suspense>
             <div className="board-card-bottom">
               <span><i aria-hidden="true" className="exit-mark" /> {t("game.exit")}</span>
               <span className="board-caption">{t("game.caption")}</span>
             </div>
           </div>
-
           <div className="play-note">
             <span aria-hidden="true" className="note-symbol">{t("game.noteSymbol")}</span>
             <p>{t("game.note")}</p>
           </div>
+          {gameSnapshot.status === "won" && winRecord && (
+            <WinDialog
+              hasNextLevel={nextUnlockedLevel !== null}
+              levelName={activeLevel.names[activeLocale]}
+              onBackToLevels={() => navigateTo("levels")}
+              onNextLevel={() => nextUnlockedLevel && openLevel(nextUnlockedLevel.id)}
+              onReplay={() => startReplay(winRecord, "game")}
+              record={winRecord}
+            />
+          )}
         </section>
+      )}
+
+      {screen === "game" && !activeLevel && (
+        <div aria-live="polite" className="phaser-loading">
+          {t(levelLoadFailed ? "levels.loadError" : "game.loading")}
+        </div>
+      )}
+
+      {screen === "replay" && selectedReplay && replayLevel && (
+        <ReplayScreen
+          level={replayLevel}
+          onExit={exitReplay}
+          pieceLabels={pieceLabels}
+          record={selectedReplay}
+        />
       )}
 
       <footer className="page-footer">
