@@ -22,7 +22,7 @@ export function HomeScreen({
           <span aria-hidden="true" className="eyebrow-rule" />
           {t("home.eyebrow")}
         </p>
-        <h1 id="home-title">
+        <h1 data-modal-return-focus id="home-title" tabIndex={-1}>
           {t("home.titleFirst")}
           <br />
           <span>{t("home.titleSecond")}</span>

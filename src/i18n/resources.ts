@@ -99,7 +99,9 @@ export interface TranslationResource {
     starsLabel: string;
     steps: string;
     completedAt: string;
+    elapsed: string;
     recordSaved: string;
+    recordNotSaved: string;
     replay: string;
     nextLevel: string;
     backToLevels: string;
@@ -109,6 +111,8 @@ export interface TranslationResource {
     title: string;
     description: string;
     steps: string;
+    elapsed: string;
+    elapsedUnknown: string;
     stars: string;
     replay: string;
     delete: string;
@@ -192,7 +196,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       tier: "第 {{number}} 档",
       levelCount: "{{count}} 关",
       tierUnlocked: "本档已解锁，可以选择任意关卡。",
-      unlockProgress: "上一档已通关 {{completed}} / {{required}} 关（共 {{total}} 关），达到门槛后解锁本档。",
+      unlockProgress: "第 {{tier}} 档是尚未满足的前置门槛：已通关 {{completed}} / {{required}} 关（共 {{total}} 关），达到门槛后解锁本档。",
       showAll: "全部关卡",
       showFavorites: "仅看收藏",
       levelNumber: "第 {{number}} 关",
@@ -258,7 +262,9 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       starsLabel: "本次获得 {{count}} 颗星",
       steps: "完成步数",
       completedAt: "通关时间",
+      elapsed: "耗时",
       recordSaved: "完整走法已保存，可随时从关卡记录中回放。",
+      recordNotSaved: "通关记录未能保存，刷新页面后可能无法找回本次走法。",
       replay: "回放本局",
       nextLevel: "下一关",
       backToLevels: "返回选关",
@@ -268,6 +274,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       title: "第 {{number}} 关 · {{name}}",
       description: "共 {{count}} 条记录，步数较少的排在前面。",
       steps: "{{count}} 步",
+      elapsed: "耗时 {{time}}",
+      elapsedUnknown: "耗时未知",
       stars: "{{count}} 颗星",
       replay: "回放",
       delete: "删除",
@@ -279,7 +287,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     replay: {
       eyebrow: "通关回放 · 第 {{number}} 关",
       title: "回放：{{name}}",
-      recordSummary: "{{steps}} 步 · {{time}} 完成",
+      recordSummary: "{{steps}} 步 · 耗时 {{elapsed}} · {{time}} 完成",
       exit: "退出回放",
       boardLabel: "回放棋盘",
       progress: "第 {{current}} / {{total}} 步",
@@ -346,7 +354,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       tier: "第 {{number}} 檔",
       levelCount: "{{count}} 關",
       tierUnlocked: "本檔已解鎖，可以選擇任意關卡。",
-      unlockProgress: "上一檔已通關 {{completed}} / {{required}} 關（共 {{total}} 關），達到門檻後解鎖本檔。",
+      unlockProgress: "第 {{tier}} 檔是尚未滿足的前置門檻：已通關 {{completed}} / {{required}} 關（共 {{total}} 關），達到門檻後解鎖本檔。",
       showAll: "全部關卡",
       showFavorites: "只看收藏",
       levelNumber: "第 {{number}} 關",
@@ -412,7 +420,9 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       starsLabel: "本次獲得 {{count}} 顆星",
       steps: "完成步數",
       completedAt: "通關時間",
+      elapsed: "耗時",
       recordSaved: "完整走法已保存，可隨時從關卡記錄中回放。",
+      recordNotSaved: "通關記錄未能保存，重新整理頁面後可能無法找回本次走法。",
       replay: "回放本局",
       nextLevel: "下一關",
       backToLevels: "返回選關",
@@ -422,6 +432,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       title: "第 {{number}} 關 · {{name}}",
       description: "共 {{count}} 條記錄，步數較少的排在前面。",
       steps: "{{count}} 步",
+      elapsed: "耗時 {{time}}",
+      elapsedUnknown: "耗時未知",
       stars: "{{count}} 顆星",
       replay: "回放",
       delete: "刪除",
@@ -433,7 +445,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     replay: {
       eyebrow: "通關回放 · 第 {{number}} 關",
       title: "回放：{{name}}",
-      recordSummary: "{{steps}} 步 · {{time}} 完成",
+      recordSummary: "{{steps}} 步 · 耗時 {{elapsed}} · {{time}} 完成",
       exit: "退出回放",
       boardLabel: "回放棋盤",
       progress: "第 {{current}} / {{total}} 步",
@@ -500,7 +512,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       tier: "Tier {{number}}",
       levelCount: "{{count}} levels",
       tierUnlocked: "This tier is unlocked. Choose any level.",
-      unlockProgress: "Complete {{required}} of {{total}} levels in the previous tier to unlock this one ({{completed}} complete).",
+      unlockProgress: "Tier {{tier}} is the first unmet prerequisite: {{completed}} of {{required}} levels complete ({{total}} total).",
       showAll: "All levels",
       showFavorites: "Favorites only",
       levelNumber: "Level {{number}}",
@@ -566,7 +578,9 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       starsLabel: "Star rating earned this run: {{count}}",
       steps: "Moves",
       completedAt: "Completed",
+      elapsed: "Time",
       recordSaved: "The full move sequence is saved and can be replayed from this level's history.",
+      recordNotSaved: "This completion could not be saved. The move sequence may be lost after you leave or refresh.",
       replay: "Replay this run",
       nextLevel: "Next level",
       backToLevels: "Back to levels",
@@ -576,6 +590,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       title: "Level {{number}} · {{name}}",
       description: "Completion records: {{count}}. Sorted by fewest moves.",
       steps: "Moves: {{count}}",
+      elapsed: "Time {{time}}",
+      elapsedUnknown: "Time unknown",
       stars: "Star rating: {{count}}",
       replay: "Replay",
       delete: "Delete",
@@ -587,7 +603,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     replay: {
       eyebrow: "COMPLETION REPLAY · LEVEL {{number}}",
       title: "Replay: {{name}}",
-      recordSummary: "{{steps}} moves · completed {{time}}",
+      recordSummary: "{{steps}} moves · {{elapsed}} elapsed · completed {{time}}",
       exit: "Exit replay",
       boardLabel: "Replay board",
       progress: "Move {{current}} of {{total}}",

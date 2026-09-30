@@ -1075,6 +1075,10 @@ button:focus-visible {
   gap: 12px;
 }
 
+.win-stats > div:last-child {
+  grid-column: 1 / -1;
+}
+
 .win-stats > div {
   min-width: 0;
   padding: 13px 10px;
@@ -1093,6 +1097,7 @@ button:focus-visible {
 .win-stats strong {
   color: var(--ink);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .win-record-note {
@@ -1100,6 +1105,10 @@ button:focus-visible {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.7;
+}
+
+.win-record-note--warning {
+  color: var(--vermilion-deep);
 }
 
 .dialog-actions {

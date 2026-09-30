@@ -162,7 +162,8 @@ export class PuzzleScene extends Phaser.Scene {
     }
     // Keep the first dominant direction for this gesture; diagonal corrections
     // should not change which move is committed when the pointer is released.
-    drag.axis ??= this.dominantAxisForDelta(deltaX, deltaY);
+    drag.axis ??= this.axisWithLegalMove(drag, deltaX, deltaY);
+    if (!drag.axis) return;
 
     const delta = drag.axis === "horizontal" ? deltaX : deltaY;
     const direction = drag.axis === "horizontal"
@@ -186,7 +187,11 @@ export class PuzzleScene extends Phaser.Scene {
     const deltaX = pointer.worldX - drag.pointerStartX;
     const deltaY = pointer.worldY - drag.pointerStartY;
     if (!drag.moved && Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) return;
-    drag.axis ??= this.dominantAxisForDelta(deltaX, deltaY);
+    drag.axis ??= this.axisWithLegalMove(drag, deltaX, deltaY);
+    if (!drag.axis) {
+      this.bounceToSnapshot(drag.view);
+      return;
+    }
 
     const delta = drag.axis === "horizontal" ? deltaX : deltaY;
     const direction = drag.axis === "horizontal"
@@ -214,6 +219,22 @@ export class PuzzleScene extends Phaser.Scene {
 
   private dominantAxisForDelta(deltaX: number, deltaY: number): MovementAxis {
     return Math.abs(deltaX) >= Math.abs(deltaY) ? "horizontal" : "vertical";
+  }
+
+  private axisWithLegalMove(
+    drag: DragState,
+    deltaX: number,
+    deltaY: number,
+  ): MovementAxis | null {
+    const horizontalDirection = deltaX < 0 ? "left" : "right";
+    const verticalDirection = deltaY < 0 ? "up" : "down";
+    const horizontalLegal = drag.maximumDistances[horizontalDirection] > 0;
+    const verticalLegal = drag.maximumDistances[verticalDirection] > 0;
+
+    if (horizontalLegal && verticalLegal) return this.dominantAxisForDelta(deltaX, deltaY);
+    if (horizontalLegal) return "horizontal";
+    if (verticalLegal) return "vertical";
+    return null;
   }
 
   private maximumLegalDistances(pieceId: string): Record<Direction, number> {

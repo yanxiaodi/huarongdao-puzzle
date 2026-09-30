@@ -20,6 +20,7 @@ import {
 } from "./progress";
 
 const STORAGE_KEY = "huarongdao.progress";
+const COMPLETION_STORAGE_KEY = "huarongdao.completions";
 
 export type ProgressStorageError = "unavailable" | "quota" | "write-failed";
 
@@ -27,16 +28,26 @@ export interface ProgressStore {
   load(levels: ReadonlyMap<number, Level>): ProgressSnapshot;
   getSnapshot(): ProgressSnapshot;
   getStorageError(): ProgressStorageError | null;
-  subscribe(listener: () => void): () => void;
+  subscribe(listener: (progressChanged: boolean) => void): () => void;
   getGame(levelId: number): GameSnapshot | null;
   getMostRecentUnfinishedLevelId(): number | null;
-  openLevel(level: Level): GameSnapshot;
-  saveGame(snapshot: GameSnapshot): void;
-  recordWin(snapshot: GameSnapshot, level: Level): CompletionRecord;
+  openLevel(level: Level): OpenedGame;
+  saveGame(snapshot: GameSnapshot, elapsedMs?: number): void;
+  recordWin(snapshot: GameSnapshot, level: Level, elapsedMs?: number): RecordedCompletion;
   toggleFavorite(levelId: number): void;
   deleteCompletionRecord(recordId: string): void;
   updateSettings(settings: UserSettings): void;
 }
+
+export type OpenedGame = {
+  snapshot: GameSnapshot;
+  elapsedMs: number;
+};
+
+export type RecordedCompletion = {
+  record: CompletionRecord;
+  saved: boolean;
+};
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -52,6 +63,10 @@ function isTimestamp(value: unknown): value is string {
   return typeof value === "string" &&
     value.length > 0 &&
     Number.isFinite(Date.parse(value));
+}
+
+function isElapsedTime(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) >= 0;
 }
 
 function isMoveCommand(value: unknown): value is MoveCommand {
@@ -85,7 +100,10 @@ function validateCompletionRecord(
     record.moves.length !== record.steps ||
     !record.moves.every(isMoveCommand) ||
     !isStarRating(record.stars) ||
-    !isTimestamp(record.completedAt)
+    !isTimestamp(record.completedAt) ||
+    (record.elapsedMs !== undefined &&
+      record.elapsedMs !== null &&
+      !isElapsedTime(record.elapsedMs))
   ) {
     return false;
   }
@@ -138,6 +156,7 @@ function validateProgressSnapshot(
       !level ||
       !saved ||
       !isTimestamp(saved.openedAt) ||
+      (saved.elapsedMs !== undefined && !isElapsedTime(saved.elapsedMs)) ||
       !isValidGameSnapshot(saved.snapshot, level) ||
       saved.snapshot.status !== "playing"
     ) {
@@ -187,6 +206,22 @@ function validateProgressSnapshot(
   return true;
 }
 
+function normalizeLegacyElapsedTimes(snapshot: ProgressSnapshot): ProgressSnapshot {
+  return {
+    ...snapshot,
+    gamesByLevel: Object.fromEntries(
+      Object.entries(snapshot.gamesByLevel).map(([levelId, saved]) => [
+        levelId,
+        { ...saved, elapsedMs: isElapsedTime(saved.elapsedMs) ? saved.elapsedMs : 0 },
+      ]),
+    ),
+    completionRecords: snapshot.completionRecords.map((record) => ({
+      ...record,
+      elapsedMs: isElapsedTime(record.elapsedMs) ? record.elapsedMs : null,
+    })),
+  };
+}
+
 function cloneGameSnapshot(snapshot: GameSnapshot): GameSnapshot {
   return {
     ...snapshot,
@@ -220,9 +255,10 @@ function createRecordId(): string {
 
 export class LocalProgressStore implements ProgressStore {
   private snapshot: ProgressSnapshot;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new Set<(progressChanged: boolean) => void>();
   private levels: ReadonlyMap<number, Level> = new Map();
   private storageError: ProgressStorageError | null;
+  private completionStorageReady = false;
 
   constructor(
     private readonly storage: Storage | null,
@@ -234,6 +270,7 @@ export class LocalProgressStore implements ProgressStore {
 
   load(levels: ReadonlyMap<number, Level>): ProgressSnapshot {
     this.levels = levels;
+    this.completionStorageReady = false;
     const fallback = createEmptyProgressSnapshot(this.initialLocale);
     if (!levels.has(1)) {
       throw new Error("The level catalogue is missing Level 1.");
@@ -248,13 +285,44 @@ export class LocalProgressStore implements ProgressStore {
       const serialized = this.storage.getItem(STORAGE_KEY);
       if (serialized === null) {
         this.snapshot = fallback;
+        this.completionStorageReady = true;
       } else {
         const parsed: unknown = JSON.parse(serialized);
-        this.snapshot = validateProgressSnapshot(parsed, levels)
-          ? cloneProgressSnapshot(parsed)
+        const parsedSnapshot = asRecord(parsed);
+        const serializedCompletions = this.storage.getItem(COMPLETION_STORAGE_KEY);
+        const legacyRecords = Array.isArray(parsedSnapshot?.completionRecords)
+          ? parsedSnapshot.completionRecords
+          : [];
+        const completionRecords: unknown[] = serializedCompletions === null
+          ? [...legacyRecords]
+          : JSON.parse(serializedCompletions);
+        if (!Array.isArray(completionRecords)) throw new Error("Invalid completion history.");
+        const completionIds = new Set(
+          completionRecords.flatMap((record) => {
+            const id = asRecord(record)?.id;
+            return typeof id === "string" ? [id] : [];
+          }),
+        );
+        let hasUnsyncedLegacyRecords = false;
+        for (const record of legacyRecords) {
+          const id = asRecord(record)?.id;
+          if (typeof id !== "string" || completionIds.has(id)) continue;
+          completionRecords.push(record);
+          completionIds.add(id);
+          hasUnsyncedLegacyRecords = true;
+        }
+        const combined = { ...parsedSnapshot, completionRecords };
+        const valid = validateProgressSnapshot(combined, levels);
+        this.snapshot = valid
+          ? cloneProgressSnapshot(normalizeLegacyElapsedTimes(combined as ProgressSnapshot))
           : fallback;
+        const hasHistoryToPersist = completionRecords.length > 0 && serializedCompletions === null;
+        this.completionStorageReady = valid && !hasUnsyncedLegacyRecords && !hasHistoryToPersist;
+        if (valid && !this.completionStorageReady) {
+          this.completionStorageReady = this.persistCompletionRecordsOnly();
+        }
       }
-      this.storageError = null;
+      if (this.completionStorageReady) this.storageError = null;
     } catch {
       this.snapshot = fallback;
       this.storageError = "unavailable";
@@ -270,7 +338,7 @@ export class LocalProgressStore implements ProgressStore {
     return this.storageError;
   }
 
-  subscribe(listener: () => void): () => void {
+  subscribe(listener: (progressChanged: boolean) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
@@ -287,7 +355,7 @@ export class LocalProgressStore implements ProgressStore {
     return mostRecent ? Number(mostRecent[0]) : null;
   }
 
-  openLevel(level: Level): GameSnapshot {
+  openLevel(level: Level): OpenedGame {
     const canonicalLevel = this.levels.get(level.id);
     if (!canonicalLevel) {
       throw new Error(`Level ${level.id} is not in the canonical catalogue.`);
@@ -304,33 +372,43 @@ export class LocalProgressStore implements ProgressStore {
       ...this.snapshot,
       gamesByLevel: {
         ...this.snapshot.gamesByLevel,
-        [key]: { snapshot: cloneGameSnapshot(gameSnapshot), openedAt: new Date(newestOpenedAt).toISOString() },
+        [key]: {
+          snapshot: cloneGameSnapshot(gameSnapshot),
+          openedAt: new Date(newestOpenedAt).toISOString(),
+          elapsedMs: previous?.elapsedMs ?? 0,
+        },
       },
     });
-    return cloneGameSnapshot(gameSnapshot);
+    return {
+      snapshot: cloneGameSnapshot(gameSnapshot),
+      elapsedMs: previous?.elapsedMs ?? 0,
+    };
   }
 
-  saveGame(snapshot: GameSnapshot): void {
+  saveGame(snapshot: GameSnapshot, elapsedMs = 0): void {
     const level = this.levels.get(snapshot.levelId);
-    if (!level || snapshot.status !== "playing" || !isValidGameSnapshot(snapshot, level)) {
+    if (!level || snapshot.levelId !== level.id || snapshot.status !== "playing") {
       return;
     }
 
     const key = String(snapshot.levelId);
     const existing = this.snapshot.gamesByLevel[key];
-    this.update({
+    this.snapshot = {
       ...this.snapshot,
       gamesByLevel: {
         ...this.snapshot.gamesByLevel,
         [key]: {
           snapshot: cloneGameSnapshot(snapshot),
           openedAt: existing?.openedAt ?? new Date().toISOString(),
+          elapsedMs: isElapsedTime(elapsedMs) ? elapsedMs : existing?.elapsedMs ?? 0,
         },
       },
-    });
+    };
+    this.persist();
+    this.notify(false);
   }
 
-  recordWin(snapshot: GameSnapshot, level: Level): CompletionRecord {
+  recordWin(snapshot: GameSnapshot, level: Level, elapsedMs = 0): RecordedCompletion {
     const canonicalLevel = this.levels.get(level.id);
     if (
       snapshot.status !== "won" ||
@@ -348,10 +426,11 @@ export class LocalProgressStore implements ProgressStore {
       moves: snapshot.moves.map((move) => ({ ...move })),
       stars,
       completedAt: new Date().toISOString(),
+      elapsedMs: isElapsedTime(elapsedMs) ? elapsedMs : 0,
     };
     const key = String(canonicalLevel.id);
     const previousBest = this.snapshot.bestStars[key];
-    this.update({
+    const saved = this.update({
       ...this.snapshot,
       gamesByLevel: removeKey(this.snapshot.gamesByLevel, key),
       bestStars: {
@@ -359,8 +438,11 @@ export class LocalProgressStore implements ProgressStore {
         [key]: previousBest ? Math.max(previousBest, stars) as StarRating : stars,
       },
       completionRecords: [...this.snapshot.completionRecords, record],
-    });
-    return { ...record, moves: record.moves.map((move) => ({ ...move })) };
+    }, true);
+    return {
+      record: { ...record, moves: record.moves.map((move) => ({ ...move })) },
+      saved,
+    };
   }
 
   toggleFavorite(levelId: number): void {
@@ -375,7 +457,7 @@ export class LocalProgressStore implements ProgressStore {
     this.update({
       ...this.snapshot,
       completionRecords: this.snapshot.completionRecords.filter((record) => record.id !== recordId),
-    });
+    }, true);
   }
 
   updateSettings(settings: UserSettings): void {
@@ -383,28 +465,47 @@ export class LocalProgressStore implements ProgressStore {
     this.update({ ...this.snapshot, settings: { ...settings } });
   }
 
-  private update(snapshot: ProgressSnapshot): void {
+  private update(snapshot: ProgressSnapshot, completionRecordsChanged = false): boolean {
     this.snapshot = cloneProgressSnapshot(snapshot);
-    this.persist();
+    const saved = this.persist(completionRecordsChanged);
     this.notify();
+    return saved;
   }
 
-  private persist(): void {
+  private persist(completionRecordsChanged = false): boolean {
     if (!this.storage) {
       this.storageError = "unavailable";
-      return;
+      return false;
     }
 
     try {
-      this.storage.setItem(STORAGE_KEY, JSON.stringify(this.snapshot));
+      const progressWithoutHistory = { ...this.snapshot, completionRecords: [] };
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(progressWithoutHistory));
+      if (completionRecordsChanged || !this.completionStorageReady) {
+        this.storage.setItem(COMPLETION_STORAGE_KEY, JSON.stringify(this.snapshot.completionRecords));
+        this.completionStorageReady = true;
+      }
       this.storageError = null;
+      return true;
     } catch (error) {
       this.storageError = getStorageError(error);
+      return false;
     }
   }
 
-  private notify(): void {
-    for (const listener of [...this.listeners]) listener();
+  private persistCompletionRecordsOnly(): boolean {
+    if (!this.storage) return false;
+    try {
+      this.storage.setItem(COMPLETION_STORAGE_KEY, JSON.stringify(this.snapshot.completionRecords));
+      return true;
+    } catch (error) {
+      this.storageError = getStorageError(error);
+      return false;
+    }
+  }
+
+  private notify(progressChanged = true): void {
+    for (const listener of [...this.listeners]) listener(progressChanged);
   }
 }
 

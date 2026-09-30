@@ -36,7 +36,7 @@ export function GameHud({
             <span aria-hidden="true" className="eyebrow-rule" />
             {t("game.levelNumber", { number: String(levelId).padStart(3, "0") })}
           </p>
-          <h1 id="game-title">{levelName}</h1>
+          <h1 data-modal-return-focus id="game-title" tabIndex={-1}>{levelName}</h1>
         </div>
         <div className="game-step-counter" aria-live="polite">
           <span>{t("game.stepsLabel")}</span>

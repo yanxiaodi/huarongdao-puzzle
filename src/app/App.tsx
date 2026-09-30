@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { saveLocalePreference } from "../i18n/languagePreference";
@@ -32,6 +32,11 @@ const PhaserHost = lazy(() =>
 
 type Screen = "home" | "levels" | "game" | "replay";
 type ReplayReturn = "history" | "game";
+type RunTimer = {
+  levelId: number;
+  elapsedMs: number;
+  startedAt: number | null;
+};
 
 const screenTranslationKeys: Record<Exclude<Screen, "replay">, "navigation.home" | "navigation.levels" | "navigation.game"> = {
   home: "navigation.home",
@@ -50,9 +55,11 @@ export function App() {
   const [gameStore, setGameStore] = useState<InMemoryGameStore | null>(null);
   const [gameSnapshot, setGameSnapshot] = useState<GameSnapshot | null>(null);
   const [winRecord, setWinRecord] = useState<CompletionRecord | null>(null);
+  const [winRecordSaved, setWinRecordSaved] = useState(false);
   const [historyLevelId, setHistoryLevelId] = useState<number | null>(null);
   const [selectedReplay, setSelectedReplay] = useState<CompletionRecord | null>(null);
   const [replayReturn, setReplayReturn] = useState<ReplayReturn>("history");
+  const runTimer = useRef<RunTimer | null>(null);
   const { t } = useTranslation();
   const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
   const pieceLabels = TRANSLATIONS[activeLocale].game.pieces;
@@ -77,6 +84,29 @@ export function App() {
     ) ?? null;
   }, [activeLevel, levels, completedLevelIds]);
 
+  function getElapsedMs(levelId: number): number {
+    const timer = runTimer.current;
+    if (!timer || timer.levelId !== levelId) return 0;
+    return Math.round(timer.elapsedMs + (timer.startedAt === null ? 0 : performance.now() - timer.startedAt));
+  }
+
+  function pauseElapsedTimer(levelId: number): number {
+    const timer = runTimer.current;
+    if (!timer || timer.levelId !== levelId) return 0;
+    if (timer.startedAt !== null) {
+      timer.elapsedMs += Math.max(0, performance.now() - timer.startedAt);
+      timer.startedAt = null;
+    }
+    return Math.round(timer.elapsedMs);
+  }
+
+  function resumeElapsedTimer(levelId: number): void {
+    const timer = runTimer.current;
+    if (timer?.levelId === levelId && timer.startedAt === null) {
+      timer.startedAt = performance.now();
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     void loadLevelCatalog().then((catalog) => {
@@ -85,6 +115,10 @@ export function App() {
       const localeAtLoad = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
       const store = createBrowserProgressStore(localeAtLoad);
       const initialProgress = store.load(levelMap);
+      saveLocalePreference(initialProgress.settings.locale);
+      if (i18n.resolvedLanguage !== initialProgress.settings.locale) {
+        void i18n.changeLanguage(initialProgress.settings.locale);
+      }
       setLevels(catalog);
       setProgressStore(store);
       setProgress(initialProgress);
@@ -99,8 +133,8 @@ export function App() {
 
   useEffect(() => {
     if (!progressStore) return undefined;
-    return progressStore.subscribe(() => {
-      setProgress(progressStore.getSnapshot());
+    return progressStore.subscribe((progressChanged) => {
+      if (progressChanged) setProgress(progressStore.getSnapshot());
       setStorageError(progressStore.getStorageError());
     });
   }, [progressStore]);
@@ -113,9 +147,12 @@ export function App() {
       const snapshot = gameStore.getSnapshot();
       setGameSnapshot(snapshot);
       if (snapshot.status === "won" && previousStatus !== "won") {
-        setWinRecord(progressStore.recordWin(snapshot, activeLevel));
+        const elapsedMs = pauseElapsedTimer(activeLevel.id);
+        const result = progressStore.recordWin(snapshot, activeLevel, elapsedMs);
+        setWinRecord(result.record);
+        setWinRecordSaved(result.saved);
       } else if (snapshot.status === "playing") {
-        progressStore.saveGame(snapshot);
+        progressStore.saveGame(snapshot, getElapsedMs(activeLevel.id));
       }
       previousStatus = snapshot.status;
     };
@@ -123,6 +160,34 @@ export function App() {
     setGameSnapshot(gameStore.getSnapshot());
     return gameStore.subscribe(syncGame);
   }, [gameStore, activeLevel, progressStore]);
+
+  useEffect(() => {
+    if (!gameStore || !activeLevel || !progressStore) return undefined;
+
+    const levelId = activeLevel.id;
+    const persistElapsedTime = () => {
+      const elapsedMs = pauseElapsedTimer(levelId);
+      const snapshot = gameStore.getSnapshot();
+      if (snapshot.status === "playing") progressStore.saveGame(snapshot, elapsedMs);
+    };
+    const syncVisibility = () => {
+      const snapshot = gameStore.getSnapshot();
+      if (screen === "game" && snapshot.status === "playing" && !document.hidden) {
+        resumeElapsedTimer(levelId);
+      } else {
+        persistElapsedTime();
+      }
+    };
+
+    syncVisibility();
+    document.addEventListener("visibilitychange", syncVisibility);
+    window.addEventListener("pagehide", persistElapsedTime);
+    return () => {
+      document.removeEventListener("visibilitychange", syncVisibility);
+      window.removeEventListener("pagehide", persistElapsedTime);
+      persistElapsedTime();
+    };
+  }, [screen, gameStore, activeLevel, progressStore]);
 
   function isUnlocked(level: Level): boolean {
     return getDifficultyUnlockStatus(levels, completedLevelIds, level.difficulty).isUnlocked;
@@ -133,15 +198,25 @@ export function App() {
     const level = levelsById.get(levelId);
     if (!level || !isUnlocked(level)) return;
 
-    const savedSnapshot = progressStore.openLevel(level);
-    const nextStore = new InMemoryGameStore(level);
-    if (!nextStore.restore(savedSnapshot, level)) {
-      progressStore.saveGame(nextStore.getSnapshot());
+    if (activeLevel && gameStore) {
+      const elapsedMs = pauseElapsedTimer(activeLevel.id);
+      const currentSnapshot = gameStore.getSnapshot();
+      if (currentSnapshot.status === "playing") progressStore.saveGame(currentSnapshot, elapsedMs);
     }
+
+    const openedGame = progressStore.openLevel(level);
+    const nextStore = new InMemoryGameStore(level);
+    let elapsedMs = openedGame.elapsedMs;
+    if (!nextStore.restore(openedGame.snapshot, level)) {
+      elapsedMs = 0;
+      progressStore.saveGame(nextStore.getSnapshot(), elapsedMs);
+    }
+    runTimer.current = { levelId: level.id, elapsedMs, startedAt: null };
     setActiveLevel(level);
     setGameStore(nextStore);
     setGameSnapshot(nextStore.getSnapshot());
     setWinRecord(null);
+    setWinRecordSaved(false);
     setScreen("game");
   }
 
@@ -156,6 +231,12 @@ export function App() {
       else continueGame();
       return;
     }
+    if (screen === "game" && activeLevel && gameStore && progressStore) {
+      const elapsedMs = pauseElapsedTimer(activeLevel.id);
+      const snapshot = gameStore.getSnapshot();
+      if (snapshot.status === "playing") progressStore.saveGame(snapshot, elapsedMs);
+    }
+    if (progressStore) setProgress(progressStore.getSnapshot());
     setHistoryLevelId(null);
     setScreen(target);
   }
@@ -298,7 +379,14 @@ export function App() {
             levelName={activeLevel.names[activeLocale]}
             locked={gameSnapshot.status === "won"}
             onBackToLevels={() => navigateTo("levels")}
-            onRestart={() => gameStore.restart()}
+            onRestart={() => {
+              const timer = runTimer.current;
+              if (timer?.levelId === activeLevel.id) {
+                timer.elapsedMs = 0;
+                timer.startedAt = document.hidden ? null : performance.now();
+              }
+              gameStore.restart();
+            }}
             onUndo={() => gameStore.undo()}
             steps={gameSnapshot.steps}
           />
@@ -332,6 +420,7 @@ export function App() {
               onNextLevel={() => nextUnlockedLevel && openLevel(nextUnlockedLevel.id)}
               onReplay={() => startReplay(winRecord, "game")}
               record={winRecord}
+              recordSaved={winRecordSaved}
             />
           )}
         </section>

@@ -13,6 +13,7 @@ export type UserSettings = {
 export type SavedGame = {
   snapshot: GameSnapshot;
   openedAt: string;
+  elapsedMs: number;
 };
 
 export type CompletionRecord = {
@@ -22,6 +23,7 @@ export type CompletionRecord = {
   moves: MoveCommand[];
   stars: StarRating;
   completedAt: string;
+  elapsedMs: number | null;
 };
 
 export type ProgressSnapshot = {
@@ -49,6 +51,7 @@ export function cloneProgressSnapshot(snapshot: ProgressSnapshot): ProgressSnaps
   for (const [levelId, savedGame] of Object.entries(snapshot.gamesByLevel)) {
     gamesByLevel[levelId] = {
       openedAt: savedGame.openedAt,
+      elapsedMs: savedGame.elapsedMs,
       snapshot: {
         ...savedGame.snapshot,
         board: {

@@ -1,10 +1,14 @@
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { isAppLocale } from "../i18n/types";
 import type { CompletionRecord } from "../progression/progress";
+import { formatElapsedTime } from "./elapsedTime";
+import { useModalFocus } from "./useModalFocus";
 
 type WinDialogProps = {
   record: CompletionRecord;
+  recordSaved: boolean;
   levelName: string;
   hasNextLevel: boolean;
   onReplay: () => void;
@@ -14,6 +18,7 @@ type WinDialogProps = {
 
 export function WinDialog({
   record,
+  recordSaved,
   levelName,
   hasNextLevel,
   onReplay,
@@ -22,19 +27,23 @@ export function WinDialog({
 }: WinDialogProps) {
   const { t } = useTranslation();
   const locale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  useModalFocus(backdropRef, dialogRef);
+  const elapsed = formatElapsedTime(record.elapsedMs, locale) ?? t("history.elapsedUnknown");
   const completionTime = new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(record.completedAt));
 
   return (
-    <div className="dialog-backdrop win-backdrop">
-      <section aria-labelledby="win-title" aria-modal="true" className="dialog-card win-dialog" role="dialog">
+    <div className="dialog-backdrop win-backdrop" ref={backdropRef}>
+      <section aria-labelledby="win-title" aria-modal="true" className="dialog-card win-dialog" ref={dialogRef} role="dialog" tabIndex={-1}>
         <p className="eyebrow win-eyebrow">
           <span aria-hidden="true" className="eyebrow-rule" />
           {t("win.eyebrow")}
         </p>
-        <h2 id="win-title">{t("win.title")}</h2>
+        <h2 data-modal-initial-focus id="win-title" tabIndex={-1}>{t("win.title")}</h2>
         <p className="win-level-name">{levelName}</p>
         <div aria-label={t("win.starsLabel", { count: record.stars })} className="win-stars">
           {"★".repeat(record.stars)}{"☆".repeat(3 - record.stars)}
@@ -45,11 +54,17 @@ export function WinDialog({
             <strong>{record.steps}</strong>
           </div>
           <div>
+            <span>{t("win.elapsed")}</span>
+            <strong>{elapsed}</strong>
+          </div>
+          <div>
             <span>{t("win.completedAt")}</span>
             <strong>{completionTime}</strong>
           </div>
         </div>
-        <p className="win-record-note">{t("win.recordSaved")}</p>
+        <p aria-live="polite" className={recordSaved ? "win-record-note" : "win-record-note win-record-note--warning"} role={recordSaved ? undefined : "alert"}>
+          {t(recordSaved ? "win.recordSaved" : "win.recordNotSaved")}
+        </p>
         <div className="dialog-actions">
           <button className="button button--quiet" onClick={onReplay} type="button">
             {t("win.replay")}

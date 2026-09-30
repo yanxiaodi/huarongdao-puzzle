@@ -4,7 +4,7 @@ import i18n from "../i18n";
 import { isAppLocale } from "../i18n/types";
 import type { Level } from "../data/levelSchema";
 import { getDifficultyUnlockStatus } from "../game/domain/scoring";
-import { getCompletionRecordsForLevel, type ProgressSnapshot } from "../progression/progress";
+import type { ProgressSnapshot } from "../progression/progress";
 
 type LevelSelectScreenProps = {
   levels: readonly Level[];
@@ -49,6 +49,13 @@ export function LevelSelectScreen({
   );
   const unlock = getDifficultyUnlockStatus(levels, completedLevelIds, difficulty as Level["difficulty"]);
   const firstUnmetRequirement = getFirstUnmetUnlockRequirement(levels, completedLevelIds, difficulty);
+  const completionCounts = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const record of progress.completionRecords) {
+      counts.set(record.levelId, (counts.get(record.levelId) ?? 0) + 1);
+    }
+    return counts;
+  }, [progress.completionRecords]);
   const visibleLevels = levels.filter((level) =>
     level.difficulty === difficulty && (!favoritesOnly || progress.favorites.includes(level.id)),
   );
@@ -60,21 +67,20 @@ export function LevelSelectScreen({
           <span aria-hidden="true" className="eyebrow-rule" />
           {t("levels.eyebrow")}
         </p>
-        <h1 id="levels-title">{t("levels.title")}</h1>
+        <h1 data-modal-return-focus id="levels-title" tabIndex={-1}>{t("levels.title")}</h1>
         <p className="intro-description">{t("levels.description")}</p>
       </div>
 
-      <div aria-label={t("levels.difficultyLabel")} className="difficulty-tabs" role="tablist">
+      <div aria-label={t("levels.difficultyLabel")} className="difficulty-tabs" role="group">
         {DIFFICULTIES.map((tier) => {
           const status = getDifficultyUnlockStatus(levels, completedLevelIds, tier);
           const tierCount = levels.filter((level) => level.difficulty === tier).length;
           return (
             <button
-              aria-selected={difficulty === tier}
+              aria-pressed={difficulty === tier}
               className={`difficulty-tab${difficulty === tier ? " difficulty-tab--active" : ""}${status.isUnlocked ? "" : " difficulty-tab--locked"}`}
               key={tier}
               onClick={() => setDifficulty(tier)}
-              role="tab"
               type="button"
             >
               <span>{t("levels.tier", { number: tier + 1 })}</span>
@@ -93,6 +99,7 @@ export function LevelSelectScreen({
               completed: firstUnmetRequirement?.completedLevels ?? unlock.completedLevels,
               required: firstUnmetRequirement?.requiredLevels ?? unlock.requiredLevels,
               total: firstUnmetRequirement?.totalLevels ?? unlock.totalLevels,
+              tier: (firstUnmetRequirement?.prerequisiteDifficulty ?? unlock.prerequisiteDifficulty ?? 0) + 1,
             })}
           </p>
         )}
@@ -113,7 +120,7 @@ export function LevelSelectScreen({
           const locked = !status.isUnlocked;
           const stars = progress.bestStars[String(level.id)] ?? 0;
           const save = progress.gamesByLevel[String(level.id)];
-          const historyCount = getCompletionRecordsForLevel(progress, level.id).length;
+          const historyCount = completionCounts.get(level.id) ?? 0;
           return (
             <article className={`level-card${locked ? " level-card--locked" : ""}`} key={level.id}>
               <button

@@ -33,7 +33,7 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = fa
       backgroundColor: "rgba(0, 0, 0, 0)",
       input: {
         mouse: {
-          target: window,
+          target: parent,
           preventDefaultDown: true,
           preventDefaultMove: true,
           preventDefaultUp: true,

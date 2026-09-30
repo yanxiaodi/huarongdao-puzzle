@@ -6,6 +6,7 @@ import type { Level } from "../data/levelSchema";
 import type { PieceRoleId } from "../data/levelSchema";
 import { MovePlayback, type MovePlaybackSnapshot } from "../game/domain/MovePlayback";
 import type { CompletionRecord } from "../progression/progress";
+import { formatElapsedTime } from "./elapsedTime";
 
 const PhaserHost = lazy(() =>
   import("../game/PhaserHost").then(({ PhaserHost: component }) => ({ default: component })),
@@ -25,6 +26,7 @@ export function ReplayScreen({ level, record, pieceLabels, onExit }: ReplayScree
   const locale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
   const time = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" })
     .format(new Date(record.completedAt));
+  const elapsed = formatElapsedTime(record.elapsedMs, locale) ?? t("history.elapsedUnknown");
 
   useEffect(() => {
     const nextPlayback = new MovePlayback(level, record.moves);
@@ -45,8 +47,8 @@ export function ReplayScreen({ level, record, pieceLabels, onExit }: ReplayScree
             <span aria-hidden="true" className="eyebrow-rule" />
             {t("replay.eyebrow", { number: level.id })}
           </p>
-          <h1 id="replay-title">{t("replay.title", { name: level.names[locale] })}</h1>
-          <p className="replay-meta">{t("replay.recordSummary", { steps: record.steps, time })}</p>
+          <h1 data-modal-return-focus id="replay-title" tabIndex={-1}>{t("replay.title", { name: level.names[locale] })}</h1>
+          <p className="replay-meta">{t("replay.recordSummary", { steps: record.steps, time, elapsed })}</p>
         </div>
         <button className="button button--quiet" onClick={onExit} type="button">
           {t("replay.exit")}
