@@ -18,6 +18,7 @@ export type MovePlaybackSnapshot = {
 /** Replays a command sequence against a private game store. */
 export class MovePlayback {
   private readonly gameStore: InMemoryGameStore;
+  private readonly level: Level;
   private readonly moves: MoveCommand[];
   private readonly listeners = new Set<() => void>();
   private currentStep = 0;
@@ -26,6 +27,7 @@ export class MovePlayback {
   private timer: number | null = null;
 
   constructor(level: Level, moves: readonly MoveCommand[]) {
+    this.level = level;
     this.gameStore = new InMemoryGameStore(level);
     this.moves = moves.map((move) => ({ ...move }));
   }
@@ -92,8 +94,10 @@ export class MovePlayback {
       return this.getSnapshot();
     }
 
-    this.gameStore.undo();
-    this.currentStep -= 1;
+    if (!this.rebuildToStep(this.currentStep - 1)) {
+      this.notify();
+      return this.getSnapshot();
+    }
     this.status = "paused";
     this.notify();
     return this.getSnapshot();
@@ -118,8 +122,10 @@ export class MovePlayback {
 
   reset(): MovePlaybackSnapshot {
     this.stopTimer();
-    this.gameStore.restart();
-    this.currentStep = 0;
+    if (!this.rebuildToStep(0)) {
+      this.notify();
+      return this.getSnapshot();
+    }
     this.status = "paused";
     this.notify();
     return this.getSnapshot();
@@ -163,6 +169,23 @@ export class MovePlayback {
       this.status = "paused";
     }
     this.notify();
+  }
+
+  private rebuildToStep(step: number): boolean {
+    const rebuilt = new InMemoryGameStore(this.level);
+    for (let index = 0; index < step; index += 1) {
+      const move = this.moves[index];
+      if (!move || !rebuilt.move(move)) {
+        this.status = "invalid";
+        return false;
+      }
+    }
+    if (!this.gameStore.restore(rebuilt.getSnapshot(), this.level)) {
+      this.status = "invalid";
+      return false;
+    }
+    this.currentStep = step;
+    return true;
   }
 
   private notify(): void {
