@@ -38,10 +38,94 @@ function cloneBoardState(board: BoardState): BoardState {
   return { positions };
 }
 
+function cloneMoveCommand(move: MoveCommand): MoveCommand {
+  return { ...move };
+}
+
+function isMoveCommand(value: unknown): value is MoveCommand {
+  const move = asRecord(value);
+  return Boolean(
+    move &&
+    typeof move.pieceId === "string" &&
+    move.pieceId.length > 0 &&
+    (move.direction === "up" ||
+      move.direction === "down" ||
+      move.direction === "left" ||
+      move.direction === "right") &&
+    Number.isSafeInteger(move.distance) &&
+    (move.distance as number) > 0,
+  );
+}
+
+function boardsMatch(left: BoardState, right: BoardState): boolean {
+  const leftEntries = Object.entries(left.positions);
+  if (leftEntries.length !== Object.keys(right.positions).length) {
+    return false;
+  }
+
+  return leftEntries.every(([pieceId, position]) => {
+    const otherPosition = right.positions[pieceId];
+    return Boolean(
+      otherPosition &&
+        otherPosition.x === position.x &&
+        otherPosition.y === position.y,
+    );
+  });
+}
+
+/** Validates that the board, undo stack, and recorded moves form one real game path. */
+export function isValidGameSnapshot(
+  value: unknown,
+  canonicalLevel: Level,
+): value is GameSnapshot {
+  const snapshot = asRecord(value);
+  if (
+    !snapshot ||
+    !isValidLevelDefinition(canonicalLevel) ||
+    snapshot.levelId !== canonicalLevel.id ||
+    !Number.isSafeInteger(snapshot.steps) ||
+    (snapshot.steps as number) < 0 ||
+    !Array.isArray(snapshot.moves) ||
+    snapshot.moves.length !== snapshot.steps ||
+    !Array.isArray(snapshot.undoStack) ||
+    snapshot.undoStack.length !== snapshot.steps ||
+    (snapshot.status !== "playing" && snapshot.status !== "won") ||
+    !isValidBoardState(snapshot.board, canonicalLevel)
+  ) {
+    return false;
+  }
+
+  let board = createInitialBoardState(canonicalLevel);
+  for (let index = 0; index < snapshot.moves.length; index += 1) {
+    const previousBoard = snapshot.undoStack[index];
+    const move = snapshot.moves[index];
+    if (
+      !isValidBoardState(previousBoard, canonicalLevel) ||
+      !boardsMatch(previousBoard, board) ||
+      !isMoveCommand(move) ||
+      hasWon(board, canonicalLevel)
+    ) {
+      return false;
+    }
+
+    const nextBoard = applyMove(board, canonicalLevel, move);
+    if (!nextBoard) {
+      return false;
+    }
+    board = nextBoard;
+  }
+
+  return (
+    boardsMatch(snapshot.board as BoardState, board) &&
+    snapshot.status === (hasWon(board, canonicalLevel) ? "won" : "playing")
+  );
+}
+
 function cloneSnapshot(snapshot: GameSnapshot): GameSnapshot {
   return {
     ...snapshot,
     board: cloneBoardState(snapshot.board),
+    moves: snapshot.moves.map(cloneMoveCommand),
     undoStack: snapshot.undoStack.map(cloneBoardState),
   };
 }
@@ -52,6 +136,7 @@ function createInitialSnapshot(level: Level): GameSnapshot {
     levelId: level.id,
     board,
     steps: 0,
+    moves: [],
     undoStack: [],
     status: hasWon(board, level) ? "won" : "playing",
   };
@@ -99,6 +184,7 @@ export class InMemoryGameStore implements GameStore {
       levelId: this.level.id,
       board,
       steps: this.snapshot.steps + 1,
+      moves: [...this.snapshot.moves, cloneMoveCommand(command)],
       undoStack: [
         ...this.snapshot.undoStack,
         cloneBoardState(this.snapshot.board),
@@ -110,6 +196,10 @@ export class InMemoryGameStore implements GameStore {
   }
 
   undo(): void {
+    if (this.snapshot.status === "won") {
+      return;
+    }
+
     const previousBoard = this.snapshot.undoStack.at(-1);
     if (!previousBoard) {
       return;
@@ -120,6 +210,7 @@ export class InMemoryGameStore implements GameStore {
       levelId: this.level.id,
       board: cloneBoardState(previousBoard),
       steps: undoStack.length,
+      moves: this.snapshot.moves.slice(0, -1).map(cloneMoveCommand),
       undoStack,
       status: hasWon(previousBoard, this.level) ? "won" : "playing",
     };
@@ -127,6 +218,9 @@ export class InMemoryGameStore implements GameStore {
   }
 
   restart(): void {
+    if (this.snapshot.status === "won") {
+      return;
+    }
     this.snapshot = createInitialSnapshot(this.level);
     this.notify();
   }
@@ -140,41 +234,13 @@ export class InMemoryGameStore implements GameStore {
   }
 
   restore(snapshot: GameSnapshot, canonicalLevel: Level): boolean {
-    const snapshotRecord = asRecord(snapshot);
-    if (
-      !snapshotRecord ||
-      !isValidLevelDefinition(canonicalLevel) ||
-      snapshotRecord.levelId !== canonicalLevel.id ||
-      !Number.isSafeInteger(snapshotRecord.steps) ||
-      (snapshotRecord.steps as number) < 0 ||
-      !Array.isArray(snapshotRecord.undoStack) ||
-      snapshotRecord.undoStack.length !== snapshotRecord.steps ||
-      (snapshotRecord.status !== "playing" && snapshotRecord.status !== "won") ||
-      !isValidBoardState(snapshotRecord.board, canonicalLevel) ||
-      !snapshotRecord.undoStack.every((board) =>
-        isValidBoardState(board, canonicalLevel),
-      )
-    ) {
+    if (!isValidGameSnapshot(snapshot, canonicalLevel)) {
       return false;
     }
 
     const level = cloneLevel(canonicalLevel);
-    const board = snapshotRecord.board as BoardState;
-    const expectedStatus = hasWon(board, level) ? "won" : "playing";
-    if (snapshotRecord.status !== expectedStatus) {
-      return false;
-    }
-
     this.level = level;
-    this.snapshot = {
-      levelId: level.id,
-      board: cloneBoardState(board),
-      steps: snapshotRecord.steps as number,
-      undoStack: snapshotRecord.undoStack.map((previous) =>
-        cloneBoardState(previous as BoardState),
-      ),
-      status: expectedStatus,
-    };
+    this.snapshot = cloneSnapshot(snapshot);
     this.notify();
     return true;
   }

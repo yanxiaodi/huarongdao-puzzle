@@ -10,9 +10,10 @@ type PhaserHostProps = {
   level: Level;
   store: GameStore;
   pieceLabels: Record<PieceRoleId, string>;
+  readOnly?: boolean;
 };
 
-export function PhaserHost({ ariaLabel, level, store, pieceLabels }: PhaserHostProps) {
+export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = false }: PhaserHostProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<PuzzleScene | null>(null);
 
@@ -22,7 +23,7 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels }: PhaserHostP
       return undefined;
     }
 
-    const puzzleScene = new PuzzleScene({ level, store, pieceLabels });
+    const puzzleScene = new PuzzleScene({ level, store, pieceLabels, readOnly });
     sceneRef.current = puzzleScene;
 
     const config: Phaser.Types.Core.GameConfig = {
@@ -30,6 +31,16 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels }: PhaserHostP
       parent,
       transparent: true,
       backgroundColor: "rgba(0, 0, 0, 0)",
+      input: {
+        mouse: {
+          target: parent,
+          preventDefaultDown: true,
+          preventDefaultMove: true,
+          preventDefaultUp: true,
+        },
+        touch: { target: parent, capture: true },
+        windowEvents: false,
+      },
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -49,7 +60,7 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels }: PhaserHostP
       game.destroy(true);
       parent.replaceChildren();
     };
-  }, [level, store]);
+  }, [level, store, readOnly]);
 
   useEffect(() => {
     sceneRef.current?.setPieceLabels(pieceLabels);
