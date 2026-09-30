@@ -94,9 +94,15 @@ export class MovePlayback {
       return this.getSnapshot();
     }
 
-    if (!this.rebuildToStep(this.currentStep - 1)) {
-      this.notify();
-      return this.getSnapshot();
+    const previousStep = this.currentStep - 1;
+    if (this.currentStep === this.moves.length) {
+      if (!this.rebuildToStep(previousStep)) {
+        this.notify();
+        return this.getSnapshot();
+      }
+    } else {
+      this.gameStore.undo();
+      this.currentStep = previousStep;
     }
     this.status = "paused";
     this.notify();

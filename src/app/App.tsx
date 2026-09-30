@@ -306,6 +306,7 @@ export function App() {
               <button
                 aria-current={current ? "page" : undefined}
                 className={current ? "nav-link nav-link--active" : "nav-link"}
+                disabled={item === "game" && progressStore === null}
                 key={item}
                 onClick={() => navigateTo(item)}
                 type="button"

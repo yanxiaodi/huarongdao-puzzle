@@ -145,6 +145,11 @@ button:focus-visible {
   color: var(--ink);
 }
 
+.nav-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .nav-link--active {
   color: var(--ink);
   background: #fffdf8;

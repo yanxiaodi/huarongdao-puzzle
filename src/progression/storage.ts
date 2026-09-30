@@ -285,7 +285,6 @@ export class LocalProgressStore implements ProgressStore {
       const serialized = this.storage.getItem(STORAGE_KEY);
       if (serialized === null) {
         this.snapshot = fallback;
-        this.completionStorageReady = true;
       } else {
         const parsed: unknown = JSON.parse(serialized);
         const parsedSnapshot = asRecord(parsed);

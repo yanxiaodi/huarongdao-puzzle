@@ -282,6 +282,10 @@ export class PuzzleScene extends Phaser.Scene {
 
   private bounceToSnapshot(view: PieceView): void {
     if (!this.snapshot || !this.layout) return;
+    if (this.prefersReducedMotion()) {
+      this.renderSnapshot(this.snapshot, false);
+      return;
+    }
     this.interactionLocked = true;
     const destination = this.positionForPiece(view.piece.id, this.snapshot);
     this.tweens.killTweensOf(view.container);
