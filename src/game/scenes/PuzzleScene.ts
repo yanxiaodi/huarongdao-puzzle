@@ -105,6 +105,7 @@ export class PuzzleScene extends Phaser.Scene {
       !this.snapshot ||
       this.snapshot.status === "won" ||
       this.interactionLocked ||
+      this.drag !== null ||
       !this.layout
     ) {
       return;

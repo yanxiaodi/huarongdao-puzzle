@@ -1,6 +1,6 @@
 # Legacy level data
 
-The checked-in runtime catalogue is `public/data/levels.json`. It is versioned (`schemaVersion: 1`) and contains 406 levels with stable piece IDs, initial coordinates, dimensions, movement axes, difficulty, minimum steps, and localized names (`zh-CN`, `zh-Hant`, `en`). The app will use this generated JSON as its runtime catalogue. At this data-migration stage, Vite copies it as a static asset; the build never reads the old XML or runs the converter.
+The checked-in runtime catalogue is `public/data/levels.json`. It is versioned (`schemaVersion: 2`) and contains 406 levels with stable piece IDs, role IDs, initial coordinates, dimensions, movement axes, difficulty, minimum steps, and localized names (`zh-CN`, `zh-Hant`, `en`). The app will use this generated JSON as its runtime catalogue. At this data-migration stage, Vite copies it as a static asset; the build never reads the old XML or runs the converter.
 
 Legacy movement follows the original implementation: every piece can slide along either axis when its path is clear. Width and height describe its footprint, not its allowed movement axes.
 
