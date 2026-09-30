@@ -31,6 +31,16 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = fa
       parent,
       transparent: true,
       backgroundColor: "rgba(0, 0, 0, 0)",
+      input: {
+        mouse: {
+          target: window,
+          preventDefaultDown: true,
+          preventDefaultMove: true,
+          preventDefaultUp: true,
+        },
+        touch: { target: parent, capture: true },
+        windowEvents: false,
+      },
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,

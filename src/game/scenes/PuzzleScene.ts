@@ -3,6 +3,7 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   type Level,
+  type MovementAxis,
   type PieceRoleId,
 } from "../../data/levelSchema";
 import { applyMove } from "../domain/rules";
@@ -16,7 +17,8 @@ import { PieceView } from "../render/PieceView";
 const FRAME_SIZE = 13;
 const MAX_CELL_SIZE = 102;
 const MOVE_DURATION = 150;
-const INPUT_THRESHOLD = 4;
+const INPUT_THRESHOLD = 10;
+const SNAP_ASSIST_RATIO = 0.3;
 
 const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
@@ -41,6 +43,8 @@ type DragState = {
   viewStartX: number;
   viewStartY: number;
   moved: boolean;
+  axis: MovementAxis | null;
+  maximumDistances: Record<Direction, number>;
 };
 
 export class PuzzleScene extends Phaser.Scene {
@@ -89,6 +93,9 @@ export class PuzzleScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this);
     this.input.on(Phaser.Input.Events.POINTER_UP, this.finishPointer, this);
     this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.finishPointer, this);
+    this.game.canvas.addEventListener("pointerdown", this.capturePointer);
+    this.game.canvas.addEventListener("pointercancel", this.handlePointerCancel);
+    this.game.canvas.addEventListener("touchcancel", this.handlePointerCancel);
     this.redrawBoard();
 
     this.events.once(
@@ -110,16 +117,20 @@ export class PuzzleScene extends Phaser.Scene {
       !this.snapshot ||
       this.snapshot.status === "won" ||
       this.options.readOnly ||
-      this.interactionLocked ||
       this.drag !== null ||
       !this.layout
     ) {
       return;
     }
 
+    if (this.interactionLocked) {
+      // Finish the short snap tween so an immediate next drag is not discarded.
+      this.renderSnapshot(this.snapshot, false);
+    }
+
+    const maximumDistances = this.maximumLegalDistances(view.piece.id);
     this.clearSelection();
     this.selectedPieceId = view.piece.id;
-    view.setSelection(true, this.legalDirections(view.piece.id));
     this.children.bringToTop(view.container);
     this.drag = {
       view,
@@ -129,21 +140,39 @@ export class PuzzleScene extends Phaser.Scene {
       viewStartX: view.container.x,
       viewStartY: view.container.y,
       moved: false,
+      axis: null,
+      maximumDistances,
     };
+    view.setSelection(
+      true,
+      new Set(DIRECTIONS.filter((direction) => maximumDistances[direction] > 0)),
+    );
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
     const drag = this.drag;
-    if (!drag || drag.pointerId !== pointer.id || !pointer.isDown) return;
+    const layout = this.layout;
+    if (!drag || !layout || drag.pointerId !== pointer.id || !pointer.isDown) return;
 
     const deltaX = pointer.worldX - drag.pointerStartX;
     const deltaY = pointer.worldY - drag.pointerStartY;
-    if (!drag.moved && Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) return;
+    if (!drag.moved) {
+      if (Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) return;
+      drag.moved = true;
+    }
+    // Keep the first dominant direction for this gesture; diagonal corrections
+    // should not change which move is committed when the pointer is released.
+    drag.axis ??= this.dominantAxisForDelta(deltaX, deltaY);
 
-    drag.moved = true;
+    const delta = drag.axis === "horizontal" ? deltaX : deltaY;
+    const direction = drag.axis === "horizontal"
+      ? delta < 0 ? "left" : "right"
+      : delta < 0 ? "up" : "down";
+    const maximumPixels = drag.maximumDistances[direction] * layout.cellSize;
+    const constrainedDelta = Math.sign(delta) * Math.min(Math.abs(delta), maximumPixels);
     drag.view.setCenterPosition(
-      drag.viewStartX + deltaX,
-      drag.viewStartY + deltaY,
+      drag.viewStartX + (drag.axis === "horizontal" ? constrainedDelta : 0),
+      drag.viewStartY + (drag.axis === "vertical" ? constrainedDelta : 0),
     );
   }
 
@@ -152,29 +181,28 @@ export class PuzzleScene extends Phaser.Scene {
     if (!drag || drag.pointerId !== pointer.id) return;
     this.drag = null;
 
-    if (!drag.moved || !this.layout) return;
+    if (!this.layout) return;
 
     const deltaX = pointer.worldX - drag.pointerStartX;
     const deltaY = pointer.worldY - drag.pointerStartY;
-    const distanceX = Math.abs(deltaX);
-    const distanceY = Math.abs(deltaY);
-    if (Math.abs(distanceX - distanceY) <= 0.5) {
-      this.bounceToSnapshot(drag.view);
-      return;
-    }
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) return;
+    drag.axis ??= this.dominantAxisForDelta(deltaX, deltaY);
 
-    const isHorizontal = distanceX > distanceY;
-    const distance = Math.round(
-      (isHorizontal ? distanceX : distanceY) / this.layout.cellSize,
+    const delta = drag.axis === "horizontal" ? deltaX : deltaY;
+    const direction = drag.axis === "horizontal"
+      ? delta < 0 ? "left" : "right"
+      : delta < 0 ? "up" : "down";
+    const distance = Math.min(
+      Math.round(
+        Math.abs(delta) / this.layout.cellSize + SNAP_ASSIST_RATIO,
+      ),
+      drag.maximumDistances[direction],
     );
     if (distance < 1) {
       this.bounceToSnapshot(drag.view);
       return;
     }
 
-    const direction: Direction = isHorizontal
-      ? deltaX < 0 ? "left" : "right"
-      : deltaY < 0 ? "up" : "down";
     this.interactionLocked = true;
     const accepted = this.options.store.move({
       pieceId: drag.view.piece.id,
@@ -184,20 +212,52 @@ export class PuzzleScene extends Phaser.Scene {
     if (!accepted) this.bounceToSnapshot(drag.view);
   }
 
-  private legalDirections(pieceId: string): Set<Direction> {
-    const snapshot = this.snapshot;
-    if (!snapshot) return new Set();
+  private dominantAxisForDelta(deltaX: number, deltaY: number): MovementAxis {
+    return Math.abs(deltaX) >= Math.abs(deltaY) ? "horizontal" : "vertical";
+  }
 
-    return new Set(
-      DIRECTIONS.filter((direction) =>
-        applyMove(snapshot.board, this.options.level, {
+  private maximumLegalDistances(pieceId: string): Record<Direction, number> {
+    const snapshot = this.snapshot;
+    const distances: Record<Direction, number> = {
+      up: 0,
+      down: 0,
+      left: 0,
+      right: 0,
+    };
+    if (!snapshot) return distances;
+
+    for (const direction of DIRECTIONS) {
+      const limit = direction === "left" || direction === "right"
+        ? BOARD_WIDTH
+        : BOARD_HEIGHT;
+      for (let distance = 1; distance <= limit; distance += 1) {
+        if (!applyMove(snapshot.board, this.options.level, {
           pieceId,
           direction,
-          distance: 1,
-        }) !== null,
-      ),
-    );
+          distance,
+        })) {
+          break;
+        }
+        distances[direction] = distance;
+      }
+    }
+    return distances;
   }
+
+  private handlePointerCancel = (): void => {
+    const drag = this.drag;
+    if (!drag) return;
+    this.drag = null;
+    this.bounceToSnapshot(drag.view);
+  };
+
+  private capturePointer = (pointer: PointerEvent): void => {
+    try {
+      this.game.canvas.setPointerCapture(pointer.pointerId);
+    } catch {
+      // The pointer may already have left the canvas or ended before capture.
+    }
+  };
 
   private bounceToSnapshot(view: PieceView): void {
     if (!this.snapshot || !this.layout) return;
@@ -219,6 +279,10 @@ export class PuzzleScene extends Phaser.Scene {
 
   private handleStoreChange = (): void => {
     const nextSnapshot = this.options.store.getSnapshot();
+    if (nextSnapshot.status === "playing") {
+      this.winAnimationPlayed = false;
+      for (const view of this.pieceViews.values()) view.container.setAlpha(1);
+    }
     this.snapshot = nextSnapshot;
     this.renderSnapshot(nextSnapshot, true);
   };
@@ -313,6 +377,14 @@ export class PuzzleScene extends Phaser.Scene {
   private redrawBoard = (): void => {
     if (!this.boardGraphics) return;
 
+    const activeDrag = this.drag;
+    const activePointer = activeDrag ? this.input.activePointer : undefined;
+    const preserveDrag = Boolean(
+      activeDrag &&
+        activePointer?.id === activeDrag.pointerId &&
+        activePointer.isDown,
+    );
+
     const width = this.scale.width;
     const height = this.scale.height;
     const cellSize = Math.min(
@@ -322,14 +394,15 @@ export class PuzzleScene extends Phaser.Scene {
     );
     if (!Number.isFinite(cellSize) || cellSize <= 0) return;
 
+    const preserveWonAnimation = this.snapshot?.status === "won" && this.winAnimationPlayed;
     if (this.hasLaidOut) {
       for (const view of this.pieceViews.values()) {
         this.tweens.killTweensOf(view.container);
-        view.container.setAlpha(1);
+        if (!preserveWonAnimation) view.container.setAlpha(1);
       }
       this.drag = null;
       this.interactionLocked = false;
-      this.winAnimationPlayed = false;
+      if (!preserveWonAnimation) this.winAnimationPlayed = false;
       this.clearSelection();
     }
 
@@ -401,6 +474,31 @@ export class PuzzleScene extends Phaser.Scene {
     if (this.snapshot) {
       for (const view of this.pieceViews.values()) view.resize(cellSize);
       this.renderSnapshot(this.snapshot, false);
+      if (preserveWonAnimation) this.placeWonTargetAtExit();
+
+      if (
+        preserveDrag &&
+        activeDrag &&
+        activePointer?.id === activeDrag.pointerId &&
+        activePointer.isDown
+      ) {
+        const maximumDistances = this.maximumLegalDistances(activeDrag.view.piece.id);
+        this.drag = {
+          ...activeDrag,
+          pointerStartX: activePointer.worldX,
+          pointerStartY: activePointer.worldY,
+          viewStartX: activeDrag.view.container.x,
+          viewStartY: activeDrag.view.container.y,
+          moved: false,
+          axis: null,
+          maximumDistances,
+        };
+        this.selectedPieceId = activeDrag.view.piece.id;
+        activeDrag.view.setSelection(
+          true,
+          new Set(DIRECTIONS.filter((direction) => maximumDistances[direction] > 0)),
+        );
+      }
     }
     this.hasLaidOut = true;
   };
@@ -410,7 +508,19 @@ export class PuzzleScene extends Phaser.Scene {
     this.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this);
     this.input.off(Phaser.Input.Events.POINTER_UP, this.finishPointer, this);
     this.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.finishPointer, this);
+    this.game.canvas.removeEventListener("pointerdown", this.capturePointer);
+    this.game.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
+    this.game.canvas.removeEventListener("touchcancel", this.handlePointerCancel);
     this.unsubscribeStore?.();
     this.unsubscribeStore = null;
+  }
+
+  private placeWonTargetAtExit(): void {
+    if (!this.snapshot || !this.layout) return;
+    const target = this.pieceViews.get(this.options.level.targetPieceId);
+    if (!target) return;
+    const destination = this.positionForPiece(target.piece.id, this.snapshot);
+    target.setCenterPosition(destination.x, destination.y + this.layout.cellSize * 1.15);
+    target.container.setAlpha(0);
   }
 }
