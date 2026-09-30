@@ -1,6 +1,7 @@
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
+  isPieceRoleId,
 } from "../../data/levelSchema";
 import type {
   Level,
@@ -126,6 +127,7 @@ export function isValidLevelDefinition(value: unknown): value is Level {
       !piece ||
       typeof piece.id !== "string" ||
       piece.id.length === 0 ||
+      !isPieceRoleId(piece.roleId) ||
       ids.has(piece.id) ||
       !isCellCoordinate(piece.x) ||
       !isCellCoordinate(piece.y) ||

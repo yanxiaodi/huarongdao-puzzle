@@ -1,8 +1,12 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { saveLocalePreference } from "../i18n/languagePreference";
+import { TRANSLATIONS } from "../i18n/resources";
 import { isAppLocale, LANGUAGE_OPTIONS, type AppLocale } from "../i18n/types";
+import { loadLevelById } from "../data/levelCatalog";
+import type { Level } from "../data/levelSchema";
+import { InMemoryGameStore } from "../game/domain/GameStore";
 
 const PhaserHost = lazy(() =>
   import("../game/PhaserHost").then(({ PhaserHost: component }) => ({
@@ -20,8 +24,29 @@ const screenTranslationKeys: Record<Screen, "navigation.home" | "navigation.leve
 
 export function App() {
   const [screen, setScreen] = useState<Screen>("home");
+  const [defaultLevel, setDefaultLevel] = useState<Level | null>(null);
+  const [gameStore, setGameStore] = useState<InMemoryGameStore | null>(null);
+  const [levelLoadFailed, setLevelLoadFailed] = useState(false);
   const { t } = useTranslation();
   const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
+  const pieceLabels = TRANSLATIONS[activeLocale].game.pieces;
+
+  useEffect(() => {
+    if (screen !== "game" || gameStore || levelLoadFailed) return undefined;
+
+    let cancelled = false;
+    void loadLevelById(1).then((level) => {
+      if (cancelled) return;
+      setDefaultLevel(level);
+      setGameStore(new InMemoryGameStore(level));
+    }).catch(() => {
+      if (!cancelled) setLevelLoadFailed(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [screen, gameStore, levelLoadFailed]);
 
   function selectLocale(locale: AppLocale) {
     if (locale === activeLocale) {
@@ -183,7 +208,18 @@ export function App() {
               <span className="board-index">{t("game.levelNumber", { number: "001" })}</span>
             </div>
             <Suspense fallback={<div aria-live="polite" className="phaser-loading">{t("game.loading")}</div>}>
-              <PhaserHost ariaLabel={t("game.boardLabel")} />
+              {defaultLevel && gameStore ? (
+                <PhaserHost
+                  ariaLabel={t("game.boardLabel")}
+                  level={defaultLevel}
+                  store={gameStore}
+                  pieceLabels={pieceLabels}
+                />
+              ) : (
+                <div aria-live="polite" className="phaser-loading">
+                  {t(levelLoadFailed ? "game.loadError" : "game.loading")}
+                </div>
+              )}
             </Suspense>
             <div className="board-card-bottom">
               <span><i aria-hidden="true" className="exit-mark" /> {t("game.exit")}</span>

@@ -1,20 +1,29 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
+import type { Level, PieceRoleId } from "../data/levelSchema";
+import type { GameStore } from "./domain/types";
 import { BootScene } from "./scenes/BootScene";
 import { PuzzleScene } from "./scenes/PuzzleScene";
 
 type PhaserHostProps = {
   ariaLabel: string;
+  level: Level;
+  store: GameStore;
+  pieceLabels: Record<PieceRoleId, string>;
 };
 
-export function PhaserHost({ ariaLabel }: PhaserHostProps) {
+export function PhaserHost({ ariaLabel, level, store, pieceLabels }: PhaserHostProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<PuzzleScene | null>(null);
 
   useEffect(() => {
     const parent = mountRef.current;
     if (!parent) {
       return undefined;
     }
+
+    const puzzleScene = new PuzzleScene({ level, store, pieceLabels });
+    sceneRef.current = puzzleScene;
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -29,17 +38,22 @@ export function PhaserHost({ ariaLabel }: PhaserHostProps) {
         antialias: true,
         roundPixels: true,
       },
-      scene: [BootScene, PuzzleScene],
+      scene: [BootScene, puzzleScene],
       disableContextMenu: true,
     };
 
     const game = new Phaser.Game(config);
 
     return () => {
+      sceneRef.current = null;
       game.destroy(true);
       parent.replaceChildren();
     };
-  }, []);
+  }, [level, store]);
+
+  useEffect(() => {
+    sceneRef.current?.setPieceLabels(pieceLabels);
+  }, [pieceLabels]);
 
   return (
     <div

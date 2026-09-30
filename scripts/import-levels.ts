@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import OpenCC from "opencc-js";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { BOARD_HEIGHT, BOARD_WIDTH, LEVEL_SCHEMA_VERSION } from "../src/data/levelSchema.ts";
-import type { Difficulty, Level, Piece } from "../src/data/levelSchema.ts";
+import type { Difficulty, Level, Piece, PieceRoleId } from "../src/data/levelSchema.ts";
 
 const LEVEL_COUNT = 406;
 const DIFFICULTY_COUNTS: Readonly<Record<Difficulty, number>> = {
@@ -21,6 +21,28 @@ const PIECE_SHAPES: Readonly<Record<number, Pick<Piece, "width" | "height" | "ax
   3: { width: 2, height: 1, axes: ["horizontal", "vertical"] },
   4: { width: 2, height: 2, axes: ["horizontal", "vertical"] },
 };
+const SOLDIER_ROLES: readonly PieceRoleId[] = [
+  "soldier-bowman",
+  "soldier-pikeman",
+  "soldier-spearman",
+  "soldier-halberdier",
+];
+const VERTICAL_GENERAL_ROLES: readonly PieceRoleId[] = [
+  "general-zhao-yun",
+  "general-huang-zhong",
+  "general-ma-chao",
+  "general-zhang-fei",
+  "general-guan-yu",
+  "general-wei-yan",
+];
+const HORIZONTAL_GENERAL_ROLES: readonly PieceRoleId[] = [
+  "general-guan-yu",
+  "general-zhang-fei",
+  "general-ma-chao",
+  "general-huang-zhong",
+  "general-zhao-yun",
+  "general-wei-yan",
+];
 const toSimplified = OpenCC.Converter({ from: "tw", to: "cn" });
 const toTraditional = OpenCC.Converter({ from: "cn", to: "twp" });
 
@@ -147,6 +169,7 @@ function parsePieceContent(
 
   const occurrences = new Map<number, number>();
   const pieces: Piece[] = [];
+  let generalOccurrence = 0;
 
   for (let offset = 0; offset < values.length; offset += 3) {
     const pieceIndex = offset / 3 + 1;
@@ -162,14 +185,35 @@ function parsePieceContent(
 
     const occurrence = (occurrences.get(type) ?? 0) + 1;
     occurrences.set(type, occurrence);
+    if (type === 2 || type === 3) generalOccurrence += 1;
     const id = type === 4
       ? occurrence === 1 ? "cao-cao" : `cao-cao-${occurrence}`
       : `piece-${type}-${occurrence}`;
+    const roleId = roleIdFor(type, occurrence, generalOccurrence);
 
-    pieces.push({ id, x, y, ...shape });
+    pieces.push({ id, roleId, x, y, ...shape });
   }
 
   return pieces;
+}
+
+function roleIdFor(type: number, occurrence: number, generalOccurrence: number): PieceRoleId {
+  if (type === 1) {
+    const soldier = SOLDIER_ROLES[(occurrence - 1) % SOLDIER_ROLES.length];
+    const group = Math.floor((occurrence - 1) / SOLDIER_ROLES.length) + 1;
+    return group === 1 ? soldier : `${soldier}-${group}` as PieceRoleId;
+  }
+  if (type === 2) {
+    return generalOccurrence > 5
+      ? "general-wei-yan"
+      : VERTICAL_GENERAL_ROLES[occurrence - 1] ?? "general-wei-yan";
+  }
+  if (type === 3) {
+    return generalOccurrence > 5
+      ? "general-wei-yan"
+      : HORIZONTAL_GENERAL_ROLES[occurrence - 1] ?? "general-wei-yan";
+  }
+  return "cao-cao";
 }
 
 function validateLayout(levelLabel: string, pieces: Piece[], errors: string[]): void {
