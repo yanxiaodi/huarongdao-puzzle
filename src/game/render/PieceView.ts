@@ -40,11 +40,13 @@ export class PieceView {
     this.pieceTheme = pieceTheme;
     this.container = scene.add.container(0, 0);
     this.art = scene.add.graphics();
-    const imageTheme: ImagePieceTheme = pieceTheme === "text" ? "portrait" : pieceTheme;
+    const imageTexture = pieceTheme === "text"
+      ? "__MISSING"
+      : getPieceArtworkTextureKey(pieceTheme, getPieceArtworkId(piece));
     this.themeImage = scene.add.image(
       0,
       0,
-      getPieceArtworkTextureKey(imageTheme, getPieceArtworkId(piece)),
+      imageTexture,
     );
     this.ornament = scene.add.graphics();
     this.hintGraphics = scene.add.graphics();

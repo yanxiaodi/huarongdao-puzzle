@@ -14,10 +14,10 @@ import type {
 } from "../domain/types";
 import { PieceView } from "../render/PieceView";
 import {
+  getPieceArtworkId,
   getPieceArtworkTextureKey,
   getPieceArtworkUrl,
-  IMAGE_PIECE_THEMES,
-  PIECE_ARTWORK_IDS,
+  type ImagePieceTheme,
   type PieceTheme,
 } from "../../appearance/pieceTheme";
 
@@ -59,6 +59,8 @@ export class PuzzleScene extends Phaser.Scene {
   private readonly options: PuzzleSceneOptions;
   private pieceLabels: Record<PieceRoleId, string>;
   private pieceTheme: PieceTheme;
+  private readonly pendingThemeLoads = new Set<ImagePieceTheme>();
+  private themeLoadListenerAttached = false;
   private boardGraphics!: Phaser.GameObjects.Graphics;
   private readonly pieceViews = new Map<string, PieceView>();
   private layout: BoardLayout | null = null;
@@ -78,17 +80,15 @@ export class PuzzleScene extends Phaser.Scene {
   }
 
   preload(): void {
-    for (const theme of IMAGE_PIECE_THEMES) {
-      for (const artworkId of PIECE_ARTWORK_IDS) {
-        this.load.image(
-          getPieceArtworkTextureKey(theme, artworkId),
-          getPieceArtworkUrl(theme, artworkId),
-        );
-      }
-    }
+    if (this.pieceTheme !== "text") this.queuePieceArtwork(this.pieceTheme);
   }
 
   create(): void {
+    if (this.pieceTheme !== "text" && !this.hasPieceArtwork(this.pieceTheme)) {
+      console.warn(`Piece artwork for theme "${this.pieceTheme}" did not load; using text pieces for this game.`);
+      this.pieceTheme = "text";
+    }
+
     this.boardGraphics = this.add.graphics();
 
     for (const piece of this.options.level.pieces) {
@@ -135,11 +135,63 @@ export class PuzzleScene extends Phaser.Scene {
   }
 
   setPieceTheme(pieceTheme: PieceTheme): void {
+    if (pieceTheme === this.pieceTheme) return;
     this.pieceTheme = pieceTheme;
+
+    if (pieceTheme === "text") {
+      this.applyPieceTheme(pieceTheme);
+      return;
+    }
+
+    if (this.hasPieceArtwork(pieceTheme)) {
+      this.applyPieceTheme(pieceTheme);
+      return;
+    }
+
+    this.pendingThemeLoads.add(pieceTheme);
+    this.queuePieceArtwork(pieceTheme);
+    if (!this.themeLoadListenerAttached) {
+      this.themeLoadListenerAttached = true;
+      this.load.once(Phaser.Loader.Events.COMPLETE, this.finishThemeLoad);
+    }
+    this.load.start();
+  }
+
+  private queuePieceArtwork(theme: ImagePieceTheme): void {
+    const artworkIds = new Set(this.options.level.pieces.map(getPieceArtworkId));
+    for (const artworkId of artworkIds) {
+      const textureKey = getPieceArtworkTextureKey(theme, artworkId);
+      if (this.textures.exists(textureKey)) continue;
+      this.load.image(textureKey, getPieceArtworkUrl(theme, artworkId));
+    }
+  }
+
+  private hasPieceArtwork(theme: ImagePieceTheme): boolean {
+    const artworkIds = new Set(this.options.level.pieces.map(getPieceArtworkId));
+    return [...artworkIds].every((artworkId) =>
+      this.textures.exists(getPieceArtworkTextureKey(theme, artworkId)),
+    );
+  }
+
+  private applyPieceTheme(pieceTheme: PieceTheme): void {
     for (const view of this.pieceViews.values()) {
       view.setPieceTheme(pieceTheme);
     }
   }
+
+  private finishThemeLoad = (): void => {
+    this.themeLoadListenerAttached = false;
+    const loadedThemes = [...this.pendingThemeLoads];
+    this.pendingThemeLoads.clear();
+
+    for (const theme of loadedThemes) {
+      if (!this.hasPieceArtwork(theme)) {
+        console.warn(`Piece artwork for theme "${theme}" failed to load; keeping the current piece appearance.`);
+        continue;
+      }
+      if (this.pieceTheme === theme) this.applyPieceTheme(theme);
+    }
+  };
 
   private beginDrag(pointer: Phaser.Input.Pointer, view: PieceView): void {
     if (
