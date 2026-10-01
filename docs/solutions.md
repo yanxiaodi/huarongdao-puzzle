@@ -2,6 +2,8 @@
 
 本文说明 406 关解法的生成方式、静态数据格式与游戏内播放流程。解法在开发时离线生成，玩家浏览器只加载并播放数据，不会执行搜索。
 
+如果你想了解搜索算法是怎样设计出来的，请看[给初学者的算法说明](solution-search-for-beginners.md)。
+
 ## 解法数据
 
 `public/data/solutions.json` 是随网站发布的版本化目录，顶层包含 `schemaVersion: 1` 和 `solutions` 数组。每条解法通过 `levelId` 对应关卡，`moves` 按顺序保存移动命令：棋子 ID、方向（`up`、`down`、`left`、`right`）和移动格数。
