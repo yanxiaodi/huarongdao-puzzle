@@ -230,6 +230,19 @@ export function App() {
     openLevel(levelId);
   }
 
+  function playCurrentLevelAgain() {
+    if (!activeLevel || !gameStore || !progressStore) return;
+
+    runTimer.current = {
+      levelId: activeLevel.id,
+      elapsedMs: 0,
+      startedAt: document.hidden ? null : performance.now(),
+    };
+    setWinRecord(null);
+    setWinRecordSaved(false);
+    gameStore.startLevel(activeLevel);
+  }
+
   function navigateTo(target: Exclude<Screen, "replay">) {
     if (target === "game") {
       if (activeLevel && gameStore) setScreen("game");
@@ -450,6 +463,7 @@ export function App() {
               levelName={activeLevel.names[activeLocale]}
               onBackToLevels={() => navigateTo("levels")}
               onNextLevel={() => nextUnlockedLevel && openLevel(nextUnlockedLevel.id)}
+              onPlayAgain={playCurrentLevelAgain}
               onReplay={() => startReplay(winRecord, "game")}
               record={winRecord}
               recordSaved={winRecordSaved}

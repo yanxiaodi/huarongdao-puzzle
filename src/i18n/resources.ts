@@ -116,6 +116,7 @@ export interface TranslationResource {
     recordSaved: string;
     recordNotSaved: string;
     replay: string;
+    playAgain: string;
     nextLevel: string;
     backToLevels: string;
   };
@@ -292,6 +293,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       recordSaved: "完整走法已保存，可随时从关卡记录中回放。",
       recordNotSaved: "通关记录未能保存，刷新页面后可能无法找回本次走法。",
       replay: "回放本局",
+      playAgain: "重玩本关",
       nextLevel: "下一关",
       backToLevels: "返回选关",
     },
@@ -463,6 +465,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       recordSaved: "完整走法已保存，可隨時從關卡記錄中回放。",
       recordNotSaved: "通關記錄未能保存，重新整理頁面後可能無法找回本次走法。",
       replay: "回放本局",
+      playAgain: "重玩本關",
       nextLevel: "下一關",
       backToLevels: "返回選關",
     },
@@ -634,6 +637,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       recordSaved: "The full move sequence is saved and can be replayed from this level's history.",
       recordNotSaved: "This completion could not be saved. The move sequence may be lost after you leave or refresh.",
       replay: "Replay this run",
+      playAgain: "Play this level again",
       nextLevel: "Next level",
       backToLevels: "Back to levels",
     },

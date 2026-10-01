@@ -12,6 +12,7 @@ type WinDialogProps = {
   levelName: string;
   hasNextLevel: boolean;
   onReplay: () => void;
+  onPlayAgain: () => void;
   onNextLevel: () => void;
   onBackToLevels: () => void;
 };
@@ -22,6 +23,7 @@ export function WinDialog({
   levelName,
   hasNextLevel,
   onReplay,
+  onPlayAgain,
   onNextLevel,
   onBackToLevels,
 }: WinDialogProps) {
@@ -68,6 +70,9 @@ export function WinDialog({
         <div className="dialog-actions">
           <button className="button button--quiet" onClick={onReplay} type="button">
             {t("win.replay")}
+          </button>
+          <button className="button button--quiet" onClick={onPlayAgain} type="button">
+            {t("win.playAgain")}
           </button>
           {hasNextLevel ? (
             <button className="button button--primary" onClick={onNextLevel} type="button">
