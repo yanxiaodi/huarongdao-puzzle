@@ -1,5 +1,6 @@
 import type { AppLocale } from "../i18n/types";
 import { isAppLocale } from "../i18n/types";
+import { isPieceTheme } from "../appearance/pieceTheme";
 import type { Level } from "../data/levelSchema";
 import {
   applyMove,
@@ -141,7 +142,8 @@ function validateProgressSnapshot(
     !settings ||
     typeof settings.soundEnabled !== "boolean" ||
     typeof settings.locale !== "string" ||
-    !isAppLocale(settings.locale)
+    !isAppLocale(settings.locale) ||
+    (settings.pieceTheme !== undefined && !isPieceTheme(settings.pieceTheme))
   ) {
     return false;
   }
@@ -207,8 +209,13 @@ function validateProgressSnapshot(
 }
 
 function normalizeLegacyElapsedTimes(snapshot: ProgressSnapshot): ProgressSnapshot {
+  const storedSettings = snapshot.settings as UserSettings & { pieceTheme?: unknown };
   return {
     ...snapshot,
+    settings: {
+      ...snapshot.settings,
+      pieceTheme: isPieceTheme(storedSettings.pieceTheme) ? storedSettings.pieceTheme : "text",
+    },
     gamesByLevel: Object.fromEntries(
       Object.entries(snapshot.gamesByLevel).map(([levelId, saved]) => [
         levelId,
@@ -460,7 +467,11 @@ export class LocalProgressStore implements ProgressStore {
   }
 
   updateSettings(settings: UserSettings): void {
-    if (typeof settings.soundEnabled !== "boolean" || !isAppLocale(settings.locale)) return;
+    if (
+      typeof settings.soundEnabled !== "boolean" ||
+      !isAppLocale(settings.locale) ||
+      !isPieceTheme(settings.pieceTheme)
+    ) return;
     this.update({ ...this.snapshot, settings: { ...settings } });
   }
 

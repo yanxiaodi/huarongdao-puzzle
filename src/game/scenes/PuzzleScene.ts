@@ -13,6 +13,13 @@ import type {
   GameStore,
 } from "../domain/types";
 import { PieceView } from "../render/PieceView";
+import {
+  getPieceArtworkTextureKey,
+  getPieceArtworkUrl,
+  IMAGE_PIECE_THEMES,
+  PIECE_ARTWORK_IDS,
+  type PieceTheme,
+} from "../../appearance/pieceTheme";
 
 const FRAME_SIZE = 13;
 const MAX_CELL_SIZE = 102;
@@ -26,6 +33,7 @@ type PuzzleSceneOptions = {
   level: Level;
   store: GameStore;
   pieceLabels: Record<PieceRoleId, string>;
+  pieceTheme: PieceTheme;
   readOnly?: boolean;
 };
 
@@ -50,6 +58,7 @@ type DragState = {
 export class PuzzleScene extends Phaser.Scene {
   private readonly options: PuzzleSceneOptions;
   private pieceLabels: Record<PieceRoleId, string>;
+  private pieceTheme: PieceTheme;
   private boardGraphics!: Phaser.GameObjects.Graphics;
   private readonly pieceViews = new Map<string, PieceView>();
   private layout: BoardLayout | null = null;
@@ -65,6 +74,18 @@ export class PuzzleScene extends Phaser.Scene {
     super("PuzzleScene");
     this.options = options;
     this.pieceLabels = options.pieceLabels;
+    this.pieceTheme = options.pieceTheme;
+  }
+
+  preload(): void {
+    for (const theme of IMAGE_PIECE_THEMES) {
+      for (const artworkId of PIECE_ARTWORK_IDS) {
+        this.load.image(
+          getPieceArtworkTextureKey(theme, artworkId),
+          getPieceArtworkUrl(theme, artworkId),
+        );
+      }
+    }
   }
 
   create(): void {
@@ -75,6 +96,7 @@ export class PuzzleScene extends Phaser.Scene {
         this,
         piece,
         this.pieceLabels[piece.roleId],
+        this.pieceTheme,
       );
       this.pieceViews.set(piece.id, view);
       if (this.options.readOnly) {
@@ -109,6 +131,13 @@ export class PuzzleScene extends Phaser.Scene {
     this.pieceLabels = pieceLabels;
     for (const view of this.pieceViews.values()) {
       view.setLabel(pieceLabels[view.piece.roleId]);
+    }
+  }
+
+  setPieceTheme(pieceTheme: PieceTheme): void {
+    this.pieceTheme = pieceTheme;
+    for (const view of this.pieceViews.values()) {
+      view.setPieceTheme(pieceTheme);
     }
   }
 
