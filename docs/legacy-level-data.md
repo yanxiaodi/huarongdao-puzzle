@@ -19,3 +19,5 @@ The importer needs Node.js 22.6 or newer for Node's built-in TypeScript strippin
 The importer validates the 406-level count, runtime and source ID uniqueness, difficulty range and historical distribution, positive integer `MinSteps`, piece triples and known piece types, the single 2×2 Cao Cao target, board bounds, and occupied-cell collisions. Any issue reports its level and field and stops before writing output. Successful output files are staged and renamed into place.
 
 Never commit the `reference/` XML; only the generated runtime catalogue, optional provenance mapping, and importer sources belong in Git.
+
+For solution generation, validation, and playback, see [solutions.md](solutions.md).

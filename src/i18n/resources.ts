@@ -104,6 +104,7 @@ export interface TranslationResource {
     restart: string;
     confirmRestart: string;
     backToLevels: string;
+    viewSolution: string;
     pieces: Record<PieceRoleId, string>;
   };
   win: {
@@ -156,6 +157,33 @@ export interface TranslationResource {
       paused: string;
       playing: string;
       completed: string;
+      invalid: string;
+    };
+  };
+  solution: {
+    eyebrow: string;
+    title: string;
+    exit: string;
+    boardLabel: string;
+    progress: string;
+    controlsLabel: string;
+    interval: string;
+    stepBack: string;
+    stepForward: string;
+    play: string;
+    playAgain: string;
+    pause: string;
+    slower: string;
+    faster: string;
+    loading: string;
+    invalid: string;
+    notWinning: string;
+    status: {
+      playing: string;
+      paused: string;
+      completed: string;
+      locked: string;
+      unavailable: string;
       invalid: string;
     };
   };
@@ -257,6 +285,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       restart: "重开",
       confirmRestart: "确定要重开这一局吗？当前走法将被清空。",
       backToLevels: "返回选关",
+      viewSolution: "查看解法",
       pieces: {
         "soldier-bowman": "兵",
         "soldier-pikeman": "卒",
@@ -334,6 +363,33 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
         playing: "正在播放",
         completed: "回放完成",
         invalid: "回放无效",
+      },
+    },
+    solution: {
+      eyebrow: "解法演示 · 第 {{number}} 关",
+      title: "解法：{{name}}",
+      exit: "退出解法",
+      boardLabel: "解法棋盘",
+      progress: "第 {{current}} / {{total}} 步",
+      controlsLabel: "解法播放控制",
+      interval: "每步 {{seconds}} 秒",
+      stepBack: "上一步",
+      stepForward: "下一步",
+      play: "播放解法",
+      playAgain: "从头播放",
+      pause: "暂停",
+      slower: "慢一点",
+      faster: "快一点",
+      loading: "正在载入解法",
+      invalid: "第 {{move}} 步的走法无效，解法已停止。",
+      notWinning: "解法没有到达通关局面，已停止。",
+      status: {
+        playing: "正在播放",
+        paused: "已暂停",
+        completed: "解法完成",
+        locked: "此关解法尚未解锁。",
+        unavailable: "此关解法暂不可用。",
+        invalid: "解法无效",
       },
     },
     storage: {
@@ -429,6 +485,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       restart: "重開",
       confirmRestart: "確定要重開這一局嗎？目前走法將會清除。",
       backToLevels: "返回選關",
+      viewSolution: "查看解法",
       pieces: {
         "soldier-bowman": "兵",
         "soldier-pikeman": "卒",
@@ -506,6 +563,33 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
         playing: "正在播放",
         completed: "回放完成",
         invalid: "回放無效",
+      },
+    },
+    solution: {
+      eyebrow: "解法演示 · 第 {{number}} 關",
+      title: "解法：{{name}}",
+      exit: "退出解法",
+      boardLabel: "解法棋盤",
+      progress: "第 {{current}} / {{total}} 步",
+      controlsLabel: "解法播放控制",
+      interval: "每步 {{seconds}} 秒",
+      stepBack: "上一步",
+      stepForward: "下一步",
+      play: "播放解法",
+      playAgain: "從頭播放",
+      pause: "暫停",
+      slower: "慢一點",
+      faster: "快一點",
+      loading: "正在載入解法",
+      invalid: "第 {{move}} 步的走法無效，解法已停止。",
+      notWinning: "解法沒有到達通關局面，已停止。",
+      status: {
+        playing: "正在播放",
+        paused: "已暫停",
+        completed: "解法完成",
+        locked: "此關解法尚未解鎖。",
+        unavailable: "此關解法暫不可用。",
+        invalid: "解法無效",
       },
     },
     storage: {
@@ -601,6 +685,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       restart: "Restart",
       confirmRestart: "Restart this puzzle? Its current move sequence will be cleared.",
       backToLevels: "Back to levels",
+      viewSolution: "View solution",
       pieces: {
         "soldier-bowman": "Bowman",
         "soldier-pikeman": "Pikeman",
@@ -678,6 +763,33 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
         playing: "Playing",
         completed: "Replay complete",
         invalid: "Invalid replay",
+      },
+    },
+    solution: {
+      eyebrow: "SOLUTION · LEVEL {{number}}",
+      title: "Solution: {{name}}",
+      exit: "Exit solution",
+      boardLabel: "Solution board",
+      progress: "Move {{current}} of {{total}}",
+      controlsLabel: "Solution controls",
+      interval: "{{seconds}} seconds per move",
+      stepBack: "Previous move",
+      stepForward: "Next move",
+      play: "Play solution",
+      playAgain: "Play again",
+      pause: "Pause",
+      slower: "Slower",
+      faster: "Faster",
+      loading: "Loading solution",
+      invalid: "Move {{move}} is invalid; the solution has stopped.",
+      notWinning: "The solution did not reach a winning board and has stopped.",
+      status: {
+        playing: "Playing",
+        paused: "Paused",
+        completed: "Solution complete",
+        locked: "The solution for this level is locked.",
+        unavailable: "The solution for this level is unavailable.",
+        invalid: "Invalid solution",
       },
     },
     storage: {
