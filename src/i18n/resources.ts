@@ -28,6 +28,19 @@ export interface TranslationResource {
   language: {
     label: string;
   };
+  settings: {
+    open: string;
+    eyebrow: string;
+    title: string;
+    description: string;
+    choosePieceTheme: string;
+    textPieces: string;
+    warriorPortraits: string;
+    warriorLineArt: string;
+    sampleCaoCao: string;
+    sampleGeneral: string;
+    sampleSoldier: string;
+  };
   home: {
     eyebrow: string;
     titleFirst: string;
@@ -167,6 +180,19 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     navigation: { label: "主导航", returnHome: "返回首页", home: "首页", levels: "选关", game: "棋局" },
     header: { edition: "经典益智" },
     language: { label: "选择语言" },
+    settings: {
+      open: "打开设置",
+      eyebrow: "个性设置",
+      title: "棋子样式",
+      description: "切换样式会立即应用，棋局进度会保留。选择会保存在这台设备的浏览器中。",
+      choosePieceTheme: "棋子样式",
+      textPieces: "文字棋子",
+      warriorPortraits: "武将肖像",
+      warriorLineArt: "线描武将",
+      sampleCaoCao: "曹",
+      sampleGeneral: "将",
+      sampleSoldier: "兵",
+    },
     home: {
       eyebrow: "4 × 5 · 经典棋局",
       titleFirst: "一局静心，",
@@ -325,6 +351,19 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     navigation: { label: "主導覽", returnHome: "返回首頁", home: "首頁", levels: "選關", game: "棋局" },
     header: { edition: "經典益智" },
     language: { label: "選擇語言" },
+    settings: {
+      open: "開啟設定",
+      eyebrow: "個人設定",
+      title: "棋子樣式",
+      description: "切換樣式會立即套用，棋局進度會保留。選擇會保存在這台裝置的瀏覽器中。",
+      choosePieceTheme: "棋子樣式",
+      textPieces: "文字棋子",
+      warriorPortraits: "武將肖像",
+      warriorLineArt: "線描武將",
+      sampleCaoCao: "曹",
+      sampleGeneral: "將",
+      sampleSoldier: "兵",
+    },
     home: {
       eyebrow: "4 × 5 · 經典棋局",
       titleFirst: "一局靜心，",
@@ -483,6 +522,19 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
     navigation: { label: "Main navigation", returnHome: "Return to home", home: "Home", levels: "Levels", game: "Puzzle" },
     header: { edition: "Classic puzzle" },
     language: { label: "Choose language" },
+    settings: {
+      open: "Open settings",
+      eyebrow: "PREFERENCES",
+      title: "Piece style",
+      description: "Changes apply immediately, keep your current puzzle, and are saved in this browser.",
+      choosePieceTheme: "Choose a piece style",
+      textPieces: "Text pieces",
+      warriorPortraits: "Warrior portraits",
+      warriorLineArt: "Warrior line art",
+      sampleCaoCao: "C",
+      sampleGeneral: "G",
+      sampleSoldier: "S",
+    },
     home: {
       eyebrow: "4 × 5 · Classic puzzle",
       titleFirst: "A quiet game,",

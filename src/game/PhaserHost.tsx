@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import type { Level, PieceRoleId } from "../data/levelSchema";
+import type { PieceTheme } from "../appearance/pieceTheme";
 import type { GameStore } from "./domain/types";
 import { BootScene } from "./scenes/BootScene";
 import { PuzzleScene } from "./scenes/PuzzleScene";
@@ -10,10 +11,11 @@ type PhaserHostProps = {
   level: Level;
   store: GameStore;
   pieceLabels: Record<PieceRoleId, string>;
+  pieceTheme: PieceTheme;
   readOnly?: boolean;
 };
 
-export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = false }: PhaserHostProps) {
+export function PhaserHost({ ariaLabel, level, store, pieceLabels, pieceTheme, readOnly = false }: PhaserHostProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<PuzzleScene | null>(null);
 
@@ -23,7 +25,7 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = fa
       return undefined;
     }
 
-    const puzzleScene = new PuzzleScene({ level, store, pieceLabels, readOnly });
+    const puzzleScene = new PuzzleScene({ level, store, pieceLabels, pieceTheme, readOnly });
     sceneRef.current = puzzleScene;
 
     const config: Phaser.Types.Core.GameConfig = {
@@ -65,6 +67,10 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, readOnly = fa
   useEffect(() => {
     sceneRef.current?.setPieceLabels(pieceLabels);
   }, [pieceLabels]);
+
+  useEffect(() => {
+    sceneRef.current?.setPieceTheme(pieceTheme);
+  }, [pieceTheme]);
 
   return (
     <div

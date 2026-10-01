@@ -1,4 +1,5 @@
 import type { AppLocale } from "../i18n/types";
+import type { PieceTheme } from "../appearance/pieceTheme";
 import type { GameSnapshot, MoveCommand } from "../game/domain/types";
 
 export const PROGRESS_SCHEMA_VERSION = 1 as const;
@@ -8,6 +9,7 @@ export type StarRating = 1 | 2 | 3;
 export type UserSettings = {
   soundEnabled: boolean;
   locale: AppLocale;
+  pieceTheme: PieceTheme;
 };
 
 export type SavedGame = {
@@ -42,7 +44,7 @@ export function createEmptyProgressSnapshot(locale: AppLocale): ProgressSnapshot
     bestStars: {},
     favorites: [],
     completionRecords: [],
-    settings: { soundEnabled: true, locale },
+    settings: { soundEnabled: true, locale, pieceTheme: "text" },
   };
 }
 

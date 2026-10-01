@@ -6,6 +6,7 @@ import type { Level } from "../data/levelSchema";
 import type { PieceRoleId } from "../data/levelSchema";
 import { MovePlayback, type MovePlaybackSnapshot } from "../game/domain/MovePlayback";
 import type { CompletionRecord } from "../progression/progress";
+import type { PieceTheme } from "../appearance/pieceTheme";
 import { formatElapsedTime } from "./elapsedTime";
 
 const PhaserHost = lazy(() =>
@@ -16,10 +17,11 @@ type ReplayScreenProps = {
   level: Level;
   record: CompletionRecord;
   pieceLabels: Record<PieceRoleId, string>;
+  pieceTheme: PieceTheme;
   onExit: () => void;
 };
 
-export function ReplayScreen({ level, record, pieceLabels, onExit }: ReplayScreenProps) {
+export function ReplayScreen({ level, record, pieceLabels, pieceTheme, onExit }: ReplayScreenProps) {
   const { t } = useTranslation();
   const [playback, setPlayback] = useState<MovePlayback | null>(null);
   const [snapshot, setSnapshot] = useState<MovePlaybackSnapshot | null>(null);
@@ -71,6 +73,7 @@ export function ReplayScreen({ level, record, pieceLabels, onExit }: ReplayScree
               ariaLabel={t("game.boardLabel")}
               level={level}
               pieceLabels={pieceLabels}
+              pieceTheme={pieceTheme}
               readOnly
               store={playback.getGameStore()}
             />

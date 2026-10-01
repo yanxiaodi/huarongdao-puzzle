@@ -9,11 +9,13 @@ import type { Level } from "../data/levelSchema";
 import { InMemoryGameStore } from "../game/domain/GameStore";
 import { getDifficultyUnlockStatus } from "../game/domain/scoring";
 import type { GameSnapshot } from "../game/domain/types";
+import type { PieceTheme } from "../appearance/pieceTheme";
 import { CompletionHistoryDialog } from "../ui/CompletionHistoryDialog";
 import { GameHud } from "../ui/GameHud";
 import { HomeScreen } from "../ui/HomeScreen";
 import { LevelSelectScreen } from "../ui/LevelSelectScreen";
 import { ReplayScreen } from "../ui/ReplayScreen";
+import { SettingsDialog } from "../ui/SettingsDialog";
 import { WinDialog } from "../ui/WinDialog";
 import {
   createBrowserProgressStore,
@@ -59,9 +61,11 @@ export function App() {
   const [historyLevelId, setHistoryLevelId] = useState<number | null>(null);
   const [selectedReplay, setSelectedReplay] = useState<CompletionRecord | null>(null);
   const [replayReturn, setReplayReturn] = useState<ReplayReturn>("history");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const runTimer = useRef<RunTimer | null>(null);
   const { t } = useTranslation();
   const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
+  const pieceTheme = progress?.settings.pieceTheme ?? "text";
   const pieceLabels = TRANSLATIONS[activeLocale].game.pieces;
   const levelsById = useMemo(() => new Map(levels.map((level) => [level.id, level])), [levels]);
   const completedLevelIds = useMemo(
@@ -259,6 +263,11 @@ export function App() {
     });
   }
 
+  function changePieceTheme(theme: PieceTheme) {
+    if (!progressStore || progressStore.getSnapshot().settings.pieceTheme === theme) return;
+    progressStore.updateSettings({ ...progressStore.getSnapshot().settings, pieceTheme: theme });
+  }
+
   function openHistory(levelId: number) {
     setHistoryLevelId(levelId);
   }
@@ -337,11 +346,31 @@ export function App() {
               </button>
             ))}
           </div>
+          <button
+            aria-expanded={settingsOpen}
+            aria-haspopup="dialog"
+            aria-label={t("settings.open")}
+            className="settings-trigger"
+            disabled={progress === null}
+            onClick={() => setSettingsOpen(true)}
+            title={t("settings.open")}
+            type="button"
+          >
+            <span aria-hidden="true">⚙</span>
+          </button>
         </div>
       </header>
 
       {currentStorageError && <p className="storage-notice" role="status">{currentStorageError}</p>}
       {levelLoadFailed && <p className="inline-error" role="alert">{t("levels.loadError")}</p>}
+
+      {settingsOpen && progress && (
+        <SettingsDialog
+          onClose={() => setSettingsOpen(false)}
+          onSelectPieceTheme={changePieceTheme}
+          pieceTheme={pieceTheme}
+        />
+      )}
 
       {screen === "home" && (
         <HomeScreen
@@ -402,6 +431,7 @@ export function App() {
                 ariaLabel={t("game.boardLabel")}
                 level={activeLevel}
                 pieceLabels={pieceLabels}
+                pieceTheme={pieceTheme}
                 store={gameStore}
               />
             </Suspense>
@@ -439,6 +469,7 @@ export function App() {
           level={replayLevel}
           onExit={exitReplay}
           pieceLabels={pieceLabels}
+          pieceTheme={pieceTheme}
           record={selectedReplay}
         />
       )}

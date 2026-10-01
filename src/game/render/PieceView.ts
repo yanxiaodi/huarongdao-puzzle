@@ -1,6 +1,12 @@
 import Phaser from "phaser";
 import type { Piece } from "../../data/levelSchema";
 import type { Direction } from "../domain/types";
+import {
+  getPieceArtworkId,
+  getPieceArtworkTextureKey,
+  type ImagePieceTheme,
+  type PieceTheme,
+} from "../../appearance/pieceTheme";
 
 const PALETTES = {
   target: { fill: 0x963f37, edge: 0xe2c27f, text: "#fff4dc", shadow: 0x4a2824 },
@@ -11,6 +17,7 @@ const PALETTES = {
 export class PieceView {
   readonly container: Phaser.GameObjects.Container;
   private readonly art: Phaser.GameObjects.Graphics;
+  private readonly themeImage: Phaser.GameObjects.Image;
   private readonly ornament: Phaser.GameObjects.Graphics;
   private readonly selection: Phaser.GameObjects.Graphics;
   private readonly hintGraphics: Phaser.GameObjects.Graphics;
@@ -21,15 +28,26 @@ export class PieceView {
   private selected = false;
   private directions = new Set<Direction>();
   private labelText: string;
+  private pieceTheme: PieceTheme;
 
   constructor(
     scene: Phaser.Scene,
     readonly piece: Piece,
     label: string,
+    pieceTheme: PieceTheme,
   ) {
     this.labelText = label;
+    this.pieceTheme = pieceTheme;
     this.container = scene.add.container(0, 0);
     this.art = scene.add.graphics();
+    const imageTexture = pieceTheme === "text"
+      ? "__MISSING"
+      : getPieceArtworkTextureKey(pieceTheme, getPieceArtworkId(piece));
+    this.themeImage = scene.add.image(
+      0,
+      0,
+      imageTexture,
+    );
     this.ornament = scene.add.graphics();
     this.hintGraphics = scene.add.graphics();
     this.selection = scene.add.graphics();
@@ -43,12 +61,14 @@ export class PieceView {
     }).setOrigin(0.5);
     this.container.add([
       this.art,
+      this.themeImage,
       this.ornament,
       this.hintGraphics,
       this.selection,
       this.label,
     ]);
     this.container.setData("pieceId", piece.id);
+    this.applyPieceTheme();
   }
 
   resize(cellSize: number): void {
@@ -63,6 +83,7 @@ export class PieceView {
     if (this.container.input) this.container.input.cursor = "grab";
     this.drawArt();
     this.layoutLabel();
+    this.applyPieceTheme();
     this.drawSelection();
     this.drawHints();
   }
@@ -81,6 +102,11 @@ export class PieceView {
   setLabel(label: string): void {
     this.labelText = label;
     this.layoutLabel();
+  }
+
+  setPieceTheme(pieceTheme: PieceTheme): void {
+    this.pieceTheme = pieceTheme;
+    this.applyPieceTheme();
   }
 
   setSelection(selected: boolean, directions: ReadonlySet<Direction> = new Set()): void {
@@ -226,6 +252,22 @@ export class PieceView {
         backX - sideX,
         backY - sideY,
       );
+    }
+  }
+
+  private applyPieceTheme(): void {
+    const showTextArtwork = this.pieceTheme === "text";
+    this.art.setVisible(showTextArtwork);
+    this.ornament.setVisible(showTextArtwork);
+    this.label.setVisible(showTextArtwork);
+    this.themeImage.setVisible(!showTextArtwork);
+
+    if (!showTextArtwork) {
+      const imageTheme = this.pieceTheme as ImagePieceTheme;
+      this.themeImage.setTexture(
+        getPieceArtworkTextureKey(imageTheme, getPieceArtworkId(this.piece)),
+      );
+      this.themeImage.setDisplaySize(this.viewWidth, this.viewHeight);
     }
   }
 }
