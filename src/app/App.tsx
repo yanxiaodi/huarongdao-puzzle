@@ -15,6 +15,7 @@ import { GameHud } from "../ui/GameHud";
 import { HomeScreen } from "../ui/HomeScreen";
 import { LevelSelectScreen } from "../ui/LevelSelectScreen";
 import { ReplayScreen } from "../ui/ReplayScreen";
+import { SolutionScreen } from "../ui/SolutionScreen";
 import { SettingsDialog } from "../ui/SettingsDialog";
 import { WinDialog } from "../ui/WinDialog";
 import {
@@ -27,12 +28,17 @@ import {
   type CompletionRecord,
   type ProgressSnapshot,
 } from "../progression/progress";
+import { AlwaysAllowSolutionAccess } from "../solutions/AlwaysAllowSolutionAccess";
+import { LocalSolutionRepository } from "../solutions/LocalSolutionRepository";
 
 const PhaserHost = lazy(() =>
   import("../game/PhaserHost").then(({ PhaserHost: component }) => ({ default: component })),
 );
 
-type Screen = "home" | "levels" | "game" | "replay";
+const solutionRepository = new LocalSolutionRepository();
+const solutionAccessProvider = new AlwaysAllowSolutionAccess();
+
+type Screen = "home" | "levels" | "game" | "replay" | "solution";
 type ReplayReturn = "history" | "game";
 type RunTimer = {
   levelId: number;
@@ -40,7 +46,7 @@ type RunTimer = {
   startedAt: number | null;
 };
 
-const screenTranslationKeys: Record<Exclude<Screen, "replay">, "navigation.home" | "navigation.levels" | "navigation.game"> = {
+const screenTranslationKeys: Record<Exclude<Screen, "replay" | "solution">, "navigation.home" | "navigation.levels" | "navigation.game"> = {
   home: "navigation.home",
   levels: "navigation.levels",
   game: "navigation.game",
@@ -243,7 +249,7 @@ export function App() {
     gameStore.startLevel(activeLevel);
   }
 
-  function navigateTo(target: Exclude<Screen, "replay">) {
+  function navigateTo(target: Exclude<Screen, "replay" | "solution">) {
     if (target === "game") {
       if (activeLevel && gameStore) setScreen("game");
       else continueGame();
@@ -296,6 +302,15 @@ export function App() {
     setScreen(replayReturn === "game" ? "game" : "levels");
   }
 
+  function startSolution() {
+    if (!activeLevel || !gameStore || gameSnapshot?.status !== "playing") return;
+    setScreen("solution");
+  }
+
+  function exitSolution() {
+    setScreen("game");
+  }
+
   function storageErrorMessage(): string | null {
     if (storageError === "quota") return t("storage.quota");
     if (storageError === "unavailable") return t("storage.unavailable");
@@ -323,7 +338,7 @@ export function App() {
 
         <nav aria-label={t("navigation.label")} className="main-nav">
           {(["home", "levels", "game"] as const).map((item) => {
-            const current = screen === item || (screen === "replay" && item === "game");
+            const current = screen === item || ((screen === "replay" || screen === "solution") && item === "game");
             return (
               <button
                 aria-current={current ? "page" : undefined}
@@ -431,6 +446,7 @@ export function App() {
               }
               gameStore.restart();
             }}
+            onViewSolution={startSolution}
             onUndo={() => gameStore.undo()}
             steps={gameSnapshot.steps}
           />
@@ -485,6 +501,17 @@ export function App() {
           pieceLabels={pieceLabels}
           pieceTheme={pieceTheme}
           record={selectedReplay}
+        />
+      )}
+
+      {screen === "solution" && activeLevel && (
+        <SolutionScreen
+          accessProvider={solutionAccessProvider}
+          level={activeLevel}
+          onExit={exitSolution}
+          pieceLabels={pieceLabels}
+          pieceTheme={pieceTheme}
+          repository={solutionRepository}
         />
       )}
 

@@ -8,6 +8,7 @@ type GameHudProps = {
   canUndo: boolean;
   onUndo: () => void;
   onRestart: () => void;
+  onViewSolution: () => void;
   onBackToLevels: () => void;
 };
 
@@ -19,6 +20,7 @@ export function GameHud({
   canUndo,
   onUndo,
   onRestart,
+  onViewSolution,
   onBackToLevels,
 }: GameHudProps) {
   const { t } = useTranslation();
@@ -54,6 +56,9 @@ export function GameHud({
           </button>
           <button className="button button--quiet" disabled={locked} onClick={restart} type="button">
             {t("game.restart")}
+          </button>
+          <button className="button button--quiet" disabled={locked} onClick={onViewSolution} type="button">
+            {t("game.viewSolution")}
           </button>
         </div>
       </div>

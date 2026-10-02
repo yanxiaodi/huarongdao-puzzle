@@ -1000,6 +1000,8 @@ button:focus-visible {
 
 .game-action-group {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 

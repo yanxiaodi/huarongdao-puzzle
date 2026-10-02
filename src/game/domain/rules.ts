@@ -2,12 +2,12 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   isPieceRoleId,
-} from "../../data/levelSchema";
+} from "../../data/levelSchema.ts";
 import type {
   Level,
   MovementAxis,
   Piece,
-} from "../../data/levelSchema";
+} from "../../data/levelSchema.ts";
 import type {
   BoardPosition,
   BoardState,
@@ -229,7 +229,7 @@ function isDirection(value: unknown): value is Direction {
   return value === "up" || value === "down" || value === "left" || value === "right";
 }
 
-export function applyMove(
+function applyMoveCore(
   state: BoardState,
   level: Level,
   move: MoveCommand,
@@ -243,12 +243,7 @@ export function applyMove(
     return null;
   }
 
-  if (
-    !isValidLevelDefinition(level) ||
-    !isValidBoardState(state, level) ||
-    typeof moveRecord.pieceId !== "string" ||
-    !isDirection(moveRecord.direction)
-  ) {
+  if (typeof moveRecord.pieceId !== "string" || !isDirection(moveRecord.direction)) {
     return null;
   }
 
@@ -287,6 +282,37 @@ export function applyMove(
   positions[piece.id] = destination;
 
   return { positions };
+}
+
+/**
+ * Creates a move applier for a validated canonical level. Every state passed to
+ * it must be the initial board or a board previously returned by that applier.
+ * This fast path shares the exact move/collision implementation with applyMove
+ * but avoids revalidating the unchanged level and board shape for each search edge.
+ */
+export function createMoveApplier(
+  level: Level,
+): (state: BoardState, move: MoveCommand) => BoardState | null {
+  if (!isValidLevelDefinition(level)) {
+    throw new Error("Cannot create a move applier for an invalid level definition.");
+  }
+  const canonicalLevel: Level = {
+    ...level,
+    names: { ...level.names },
+    pieces: level.pieces.map((piece) => ({ ...piece, axes: [...piece.axes] })),
+  };
+  return (state, move) => applyMoveCore(state, canonicalLevel, move);
+}
+
+export function applyMove(
+  state: BoardState,
+  level: Level,
+  move: MoveCommand,
+): BoardState | null {
+  if (!isValidLevelDefinition(level) || !isValidBoardState(state, level)) {
+    return null;
+  }
+  return applyMoveCore(state, level, move);
 }
 
 export function hasWon(state: BoardState, level: Level): boolean {
