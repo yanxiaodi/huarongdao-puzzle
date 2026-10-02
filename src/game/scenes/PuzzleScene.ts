@@ -72,7 +72,13 @@ export class PuzzleScene extends Phaser.Scene {
   private unsubscribeStore: (() => void) | null = null;
   private interactionLocked = false;
   private winAnimationPlayed = false;
+  private victoryCelebrationCompleted = false;
+  private victoryFinishTimer: Phaser.Time.TimerEvent | null = null;
+  private victoryParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private hasLaidOut = false;
+  private readonly handleVictorySkip = (): void => {
+    this.completeVictoryCelebration(true);
+  };
 
   constructor(options: PuzzleSceneOptions) {
     super("PuzzleScene");
@@ -394,6 +400,11 @@ export class PuzzleScene extends Phaser.Scene {
     const nextSnapshot = this.options.store.getSnapshot();
     if (nextSnapshot.status === "playing") {
       this.winAnimationPlayed = false;
+      this.victoryCelebrationCompleted = false;
+      if (this.victoryFinishTimer || this.victoryParticles) {
+        this.cameras.main.resetFX();
+        this.cleanupVictoryCelebration();
+      }
       for (const view of this.pieceViews.values()) view.container.setAlpha(1);
     }
     this.snapshot = nextSnapshot;
@@ -460,19 +471,19 @@ export class PuzzleScene extends Phaser.Scene {
   private playExitAnimation(): void {
     if (this.winAnimationPlayed) return;
     if (!this.layout) {
-      this.options.onVictoryCelebrationComplete?.();
+      this.completeVictoryCelebration();
       return;
     }
     if (this.prefersReducedMotion()) {
       this.interactionLocked = false;
-      this.options.onVictoryCelebrationComplete?.();
+      this.completeVictoryCelebration();
       return;
     }
     this.winAnimationPlayed = true;
     this.interactionLocked = true;
     const target = this.pieceViews.get(this.options.level.targetPieceId);
     if (!target) {
-      if (!this.options.readOnly) this.options.onVictoryCelebrationComplete?.();
+      if (!this.options.readOnly) this.completeVictoryCelebration();
       return;
     }
 
@@ -507,7 +518,7 @@ export class PuzzleScene extends Phaser.Scene {
     this.cameras.main.flash(250, 255, 239, 197);
     this.cameras.main.shake(170, 0.0022);
 
-    const particles = this.add.particles(centerX, centerY, WIN_PARTICLE_TEXTURE_KEY, {
+    this.victoryParticles = this.add.particles(centerX, centerY, WIN_PARTICLE_TEXTURE_KEY, {
       angle: { min: 210, max: 330 },
       alpha: { start: 1, end: 0 },
       color: [0xffdc82, 0xfff1c9, 0xc9563d, 0x7d9a68],
@@ -519,11 +530,44 @@ export class PuzzleScene extends Phaser.Scene {
       scale: { start: 0.9, end: 0.08 },
       speed: { min: 105, max: 265 },
     });
-    particles.explode(38);
-    this.time.delayedCall(1400, () => {
-      particles.destroy();
-      this.options.onVictoryCelebrationComplete?.();
+    this.victoryParticles.explode(38);
+    this.input.once(Phaser.Input.Events.POINTER_DOWN, this.handleVictorySkip, this);
+    this.input.keyboard?.once(
+      Phaser.Input.Keyboard.Events.ANY_KEY_DOWN,
+      this.handleVictorySkip,
+      this,
+    );
+    this.victoryFinishTimer = this.time.delayedCall(1400, () => {
+      this.completeVictoryCelebration();
     });
+  }
+
+  private completeVictoryCelebration(skipped = false): void {
+    if (this.victoryCelebrationCompleted) return;
+    this.victoryCelebrationCompleted = true;
+    this.cleanupVictoryCelebration();
+
+    if (skipped) {
+      this.cameras.main.resetFX();
+      const target = this.pieceViews.get(this.options.level.targetPieceId);
+      if (target) this.tweens.killTweensOf(target.container);
+      this.placeWonTargetAtExit();
+    }
+
+    this.options.onVictoryCelebrationComplete?.();
+  }
+
+  private cleanupVictoryCelebration(): void {
+    this.victoryFinishTimer?.remove(false);
+    this.victoryFinishTimer = null;
+    this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handleVictorySkip, this);
+    this.input.keyboard?.off(
+      Phaser.Input.Keyboard.Events.ANY_KEY_DOWN,
+      this.handleVictorySkip,
+      this,
+    );
+    this.victoryParticles?.destroy();
+    this.victoryParticles = null;
   }
 
   private prefersReducedMotion(): boolean {
@@ -708,6 +752,8 @@ export class PuzzleScene extends Phaser.Scene {
     this.game.canvas.removeEventListener("pointerdown", this.capturePointer);
     this.game.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
     this.game.canvas.removeEventListener("touchcancel", this.handlePointerCancel);
+    this.cameras.main.resetFX();
+    this.cleanupVictoryCelebration();
     this.unsubscribeStore?.();
     this.unsubscribeStore = null;
   }
