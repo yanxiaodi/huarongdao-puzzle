@@ -120,6 +120,8 @@ export interface TranslationResource {
     playAgain: string;
     nextLevel: string;
     backToLevels: string;
+    tierUnlocked: string;
+    tierUnlockedDescription: string;
   };
   history: {
     eyebrow: string;
@@ -205,7 +207,7 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       description: "华容道，一款关于耐心、空间与每一步选择的经典益智游戏。",
     },
     common: { close: "关闭", cancel: "取消" },
-    brand: { name: "华容道", mark: "华", subtitle: "HUARONGDAO PUZZLE" },
+    brand: { name: "华容道", mark: "華", subtitle: "HUARONGDAO PUZZLE" },
     navigation: { label: "主导航", returnHome: "返回首页", home: "首页", levels: "选关", game: "棋局" },
     header: { edition: "经典益智" },
     language: { label: "选择语言" },
@@ -325,6 +327,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       playAgain: "重玩本关",
       nextLevel: "下一关",
       backToLevels: "返回选关",
+      tierUnlocked: "新难度解锁 · 第 {{number}} 档",
+      tierUnlockedDescription: "更多棋局等你挑战。",
     },
     history: {
       eyebrow: "通关记录",
@@ -525,6 +529,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       playAgain: "重玩本關",
       nextLevel: "下一關",
       backToLevels: "返回選關",
+      tierUnlocked: "新難度解鎖 · 第 {{number}} 檔",
+      tierUnlockedDescription: "更多棋局等你挑戰。",
     },
     history: {
       eyebrow: "通關記錄",
@@ -725,6 +731,8 @@ export const TRANSLATIONS: Record<AppLocale, TranslationResource> = {
       playAgain: "Play this level again",
       nextLevel: "Next level",
       backToLevels: "Back to levels",
+      tierUnlocked: "New difficulty unlocked · Tier {{number}}",
+      tierUnlockedDescription: "More puzzles are waiting for you.",
     },
     history: {
       eyebrow: "COMPLETION HISTORY",

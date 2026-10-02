@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { isAppLocale } from "../i18n/types";
+import type { Level } from "../data/levelSchema";
 import type { CompletionRecord } from "../progression/progress";
 import { formatElapsedTime } from "./elapsedTime";
 import { useModalFocus } from "./useModalFocus";
@@ -11,6 +12,7 @@ type WinDialogProps = {
   recordSaved: boolean;
   levelName: string;
   hasNextLevel: boolean;
+  newlyUnlockedDifficulty: Level["difficulty"] | null;
   onReplay: () => void;
   onPlayAgain: () => void;
   onNextLevel: () => void;
@@ -22,6 +24,7 @@ export function WinDialog({
   recordSaved,
   levelName,
   hasNextLevel,
+  newlyUnlockedDifficulty,
   onReplay,
   onPlayAgain,
   onNextLevel,
@@ -50,6 +53,15 @@ export function WinDialog({
         <div aria-label={t("win.starsLabel", { count: record.stars })} className="win-stars">
           {"★".repeat(record.stars)}{"☆".repeat(3 - record.stars)}
         </div>
+        {newlyUnlockedDifficulty !== null && (
+          <div aria-live="polite" className="win-tier-unlock" role="status">
+            <span aria-hidden="true" className="win-tier-unlock-seal">✦</span>
+            <div>
+              <strong>{t("win.tierUnlocked", { number: newlyUnlockedDifficulty + 1 })}</strong>
+              <p>{t("win.tierUnlockedDescription")}</p>
+            </div>
+          </div>
+        )}
         <div className="win-stats">
           <div>
             <span>{t("win.steps")}</span>

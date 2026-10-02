@@ -1,8 +1,11 @@
 import { Trans, useTranslation } from "react-i18next";
+import type { Level, PieceRoleId } from "../data/levelSchema";
 
 type HomeScreenProps = {
   ready: boolean;
   hasUnfinishedGame: boolean;
+  heroLevel: Level | null;
+  pieceLabels: Record<PieceRoleId, string>;
   onContinue: () => void;
   onBrowseLevels: () => void;
 };
@@ -10,6 +13,8 @@ type HomeScreenProps = {
 export function HomeScreen({
   ready,
   hasUnfinishedGame,
+  heroLevel,
+  pieceLabels,
   onContinue,
   onBrowseLevels,
 }: HomeScreenProps) {
@@ -57,17 +62,52 @@ export function HomeScreen({
         </div>
       </div>
 
-      <div aria-hidden="true" className="hero-seal">
-        <div className="seal-orbit seal-orbit--outer" />
-        <div className="seal-orbit seal-orbit--inner" />
-        <div className="seal-center">
-          <span className="seal-kicker">{t("home.sealKicker")}</span>
-          <strong>{t("home.sealTitle")}</strong>
-          <span className="seal-caption">{t("home.sealCaption")}</span>
+      <div aria-hidden="true" className="hero-board-scene">
+        <div className="hero-board-frame">
+          <div className="hero-board-topline">
+            <span>{t("home.sealKicker")}</span>
+            <span>4 × 5</span>
+          </div>
+          <div className="hero-board-grid">
+            {heroLevel?.pieces.map((piece) => {
+              const roleClass = piece.id === heroLevel.targetPieceId
+                ? "target"
+                : piece.roleId.startsWith("general-")
+                  ? "general"
+                  : "soldier";
+              return (
+                <span
+                  className={`hero-mini-piece hero-mini-piece--${roleClass}`}
+                  key={piece.id}
+                  style={{
+                    gridColumn: `${piece.x + 1} / span ${piece.width}`,
+                    gridRow: `${piece.y + 1} / span ${piece.height}`,
+                  }}
+                >
+                  {compactPieceLabel(pieceLabels[piece.roleId])}
+                </span>
+              );
+            })}
+          </div>
+          <div className="hero-board-exit">
+            <span aria-hidden="true" className="hero-exit-rule" />
+            <span>{t("home.sealCaption")}</span>
+            <span aria-hidden="true" className="hero-exit-arrow">↓</span>
+          </div>
         </div>
-        <span className="seal-spark seal-spark--one">✦</span>
-        <span className="seal-spark seal-spark--two">✧</span>
+        <span className="hero-board-stamp">{t("home.sealTitle")}</span>
       </div>
     </section>
   );
+}
+
+function compactPieceLabel(label: string): string {
+  const characters = [...label];
+  const ideographs = characters.filter((character) => /[\u3400-\u9fff]/.test(character));
+  if (ideographs.length > 0) return ideographs.slice(0, 2).join("");
+  return characters
+    .filter((character) => /[a-z]/i.test(character))
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }

@@ -133,13 +133,16 @@ export function LevelSelectScreen({
                 onClick={() => onSelectLevel(level.id)}
                 type="button"
               >
-                <span className="level-card-number">{t("levels.levelNumber", { number: level.id })}</span>
+                <span className="level-card-meta">
+                  <span className="level-card-number">{t("levels.levelNumber", { number: level.id })}</span>
+                  {save && <span className="level-save-badge">{t("levels.continueBadge")}</span>}
+                  {locked && <span className="level-lock-badge" aria-hidden="true">◆</span>}
+                </span>
                 <strong className="level-card-name">{level.names[locale]}</strong>
                 <span aria-label={t("levels.bestStars", { count: stars })} className="level-stars">
                   {Array.from({ length: 3 }, (_, index) => index < stars ? "★" : "☆").join("")}
                 </span>
-                {save && <span className="level-save-badge">{t("levels.continueBadge")}</span>}
-                {locked && <span className="level-lock-badge">🔒</span>}
+                <LevelMiniBoard level={level} />
               </button>
               <div className="level-card-actions">
                 <button
@@ -169,5 +172,29 @@ export function LevelSelectScreen({
         )}
       </div>
     </section>
+  );
+}
+
+function LevelMiniBoard({ level }: { level: Level }) {
+  return (
+    <span aria-hidden="true" className="level-mini-board">
+      {level.pieces.map((piece) => {
+        const roleClass = piece.id === level.targetPieceId
+          ? "target"
+          : piece.roleId.startsWith("general-")
+            ? "general"
+            : "soldier";
+        return (
+          <span
+            className={`level-mini-piece level-mini-piece--${roleClass}`}
+            key={piece.id}
+            style={{
+              gridColumn: `${piece.x + 1} / span ${piece.width}`,
+              gridRow: `${piece.y + 1} / span ${piece.height}`,
+            }}
+          />
+        );
+      })}
+    </span>
   );
 }

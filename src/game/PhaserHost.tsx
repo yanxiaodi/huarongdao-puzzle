@@ -13,9 +13,18 @@ type PhaserHostProps = {
   pieceLabels: Record<PieceRoleId, string>;
   pieceTheme: PieceTheme;
   readOnly?: boolean;
+  onVictoryCelebrationComplete?: () => void;
 };
 
-export function PhaserHost({ ariaLabel, level, store, pieceLabels, pieceTheme, readOnly = false }: PhaserHostProps) {
+export function PhaserHost({
+  ariaLabel,
+  level,
+  store,
+  pieceLabels,
+  pieceTheme,
+  readOnly = false,
+  onVictoryCelebrationComplete,
+}: PhaserHostProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<PuzzleScene | null>(null);
 
@@ -25,7 +34,14 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, pieceTheme, r
       return undefined;
     }
 
-    const puzzleScene = new PuzzleScene({ level, store, pieceLabels, pieceTheme, readOnly });
+    const puzzleScene = new PuzzleScene({
+      level,
+      store,
+      pieceLabels,
+      pieceTheme,
+      readOnly,
+      onVictoryCelebrationComplete,
+    });
     sceneRef.current = puzzleScene;
 
     const config: Phaser.Types.Core.GameConfig = {
@@ -62,7 +78,7 @@ export function PhaserHost({ ariaLabel, level, store, pieceLabels, pieceTheme, r
       game.destroy(true);
       parent.replaceChildren();
     };
-  }, [level, store, readOnly]);
+  }, [level, store, readOnly, onVictoryCelebrationComplete]);
 
   useEffect(() => {
     sceneRef.current?.setPieceLabels(pieceLabels);
