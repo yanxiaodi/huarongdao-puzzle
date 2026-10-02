@@ -503,7 +503,7 @@ export class PuzzleScene extends Phaser.Scene {
   private createWinParticleTexture(): void {
     if (this.textures.exists(WIN_PARTICLE_TEXTURE_KEY)) return;
 
-    const textureGraphics = this.make.graphics({ x: 0, y: 0, add: false });
+    const textureGraphics = this.make.graphics({ x: 0, y: 0 }, false);
     textureGraphics.fillStyle(0xffffff, 1);
     textureGraphics.fillRoundedRect(0, 0, 6, 11, 1.5);
     textureGraphics.generateTexture(WIN_PARTICLE_TEXTURE_KEY, 6, 11);
