@@ -35,7 +35,7 @@ function isSolution(value: unknown): value is Solution {
 export class LocalSolutionRepository implements SolutionRepository {
   private catalogPromise: Promise<Map<number, Solution>> | null = null;
 
-  constructor(private readonly fetcher: Fetcher = fetch) {}
+  constructor(private readonly fetcher: Fetcher = fetch.bind(globalThis)) {}
 
   async load(levelId: number): Promise<Solution | null> {
     if (!Number.isSafeInteger(levelId) || levelId <= 0) return null;
