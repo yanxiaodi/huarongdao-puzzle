@@ -23,9 +23,10 @@ import {
 
 const FRAME_SIZE = 13;
 const MAX_CELL_SIZE = 102;
-const MOVE_DURATION = 150;
+const MOVE_DURATION = 190;
 const INPUT_THRESHOLD = 10;
 const SNAP_ASSIST_RATIO = 0.3;
+const WIN_PARTICLE_TEXTURE_KEY = "hrd-win-confetti";
 
 const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
@@ -35,6 +36,7 @@ type PuzzleSceneOptions = {
   pieceLabels: Record<PieceRoleId, string>;
   pieceTheme: PieceTheme;
   readOnly?: boolean;
+  onVictoryCelebrationComplete?: () => void;
 };
 
 type BoardLayout = {
@@ -70,7 +72,13 @@ export class PuzzleScene extends Phaser.Scene {
   private unsubscribeStore: (() => void) | null = null;
   private interactionLocked = false;
   private winAnimationPlayed = false;
+  private victoryCelebrationCompleted = false;
+  private victoryFinishTimer: Phaser.Time.TimerEvent | null = null;
+  private victoryParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private hasLaidOut = false;
+  private readonly handleVictorySkip = (): void => {
+    this.completeVictoryCelebration(true);
+  };
 
   constructor(options: PuzzleSceneOptions) {
     super("PuzzleScene");
@@ -89,6 +97,7 @@ export class PuzzleScene extends Phaser.Scene {
       this.pieceTheme = "text";
     }
 
+    this.createWinParticleTexture();
     this.boardGraphics = this.add.graphics();
 
     for (const piece of this.options.level.pieces) {
@@ -267,7 +276,9 @@ export class PuzzleScene extends Phaser.Scene {
 
     const deltaX = pointer.worldX - drag.pointerStartX;
     const deltaY = pointer.worldY - drag.pointerStartY;
-    if (!drag.moved && Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) return;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < INPUT_THRESHOLD) {
+      return;
+    }
     drag.axis ??= this.axisWithLegalMove(drag, deltaX, deltaY);
     if (!drag.axis) {
       this.bounceToSnapshot(drag.view);
@@ -374,6 +385,8 @@ export class PuzzleScene extends Phaser.Scene {
       targets: view.container,
       x: destination.x,
       y: destination.y,
+      scaleX: 1,
+      scaleY: 1,
       duration: MOVE_DURATION,
       ease: "Back.Out",
       onComplete: () => {
@@ -387,6 +400,11 @@ export class PuzzleScene extends Phaser.Scene {
     const nextSnapshot = this.options.store.getSnapshot();
     if (nextSnapshot.status === "playing") {
       this.winAnimationPlayed = false;
+      this.victoryCelebrationCompleted = false;
+      if (this.victoryFinishTimer || this.victoryParticles) {
+        this.cameras.main.resetFX();
+        this.cleanupVictoryCelebration();
+      }
       for (const view of this.pieceViews.values()) view.container.setAlpha(1);
     }
     this.snapshot = nextSnapshot;
@@ -426,6 +444,7 @@ export class PuzzleScene extends Phaser.Scene {
 
       if (!shouldAnimate || !hasMoved) {
         view.setCenterPosition(destination.x, destination.y);
+        view.container.setScale(1);
         continue;
       }
 
@@ -434,9 +453,12 @@ export class PuzzleScene extends Phaser.Scene {
         targets: view.container,
         x: destination.x,
         y: destination.y,
+        scaleX: 1,
+        scaleY: 1,
         duration: MOVE_DURATION,
-        ease: "Cubic.Out",
+        ease: "Back.Out",
         onComplete: () => {
+          if (snapshot.status === "playing" && !this.options.readOnly) view.flashLanding();
           pending -= 1;
           finishAnimations();
         },
@@ -447,23 +469,105 @@ export class PuzzleScene extends Phaser.Scene {
   }
 
   private playExitAnimation(): void {
-    if (this.winAnimationPlayed || !this.layout) return;
+    if (this.winAnimationPlayed) return;
+    if (!this.layout) {
+      this.completeVictoryCelebration();
+      return;
+    }
     if (this.prefersReducedMotion()) {
       this.interactionLocked = false;
+      this.completeVictoryCelebration();
       return;
     }
     this.winAnimationPlayed = true;
     this.interactionLocked = true;
     const target = this.pieceViews.get(this.options.level.targetPieceId);
-    if (!target) return;
+    if (!target) {
+      if (!this.options.readOnly) this.completeVictoryCelebration();
+      return;
+    }
 
     this.tweens.add({
       targets: target.container,
       y: target.container.y + this.layout.cellSize * 1.15,
       alpha: 0,
-      duration: 360,
-      ease: "Cubic.In",
+      scaleX: 0.92,
+      scaleY: 0.92,
+      duration: 760,
+      ease: "Cubic.InOut",
     });
+    if (this.options.readOnly) return;
+    this.playVictoryEffects();
+  }
+
+  private createWinParticleTexture(): void {
+    if (this.textures.exists(WIN_PARTICLE_TEXTURE_KEY)) return;
+
+    const textureGraphics = this.make.graphics({ x: 0, y: 0, add: false });
+    textureGraphics.fillStyle(0xffffff, 1);
+    textureGraphics.fillRoundedRect(0, 0, 6, 11, 1.5);
+    textureGraphics.generateTexture(WIN_PARTICLE_TEXTURE_KEY, 6, 11);
+    textureGraphics.destroy();
+  }
+
+  private playVictoryEffects(): void {
+    if (!this.layout) return;
+
+    const centerX = this.layout.gridX + BOARD_WIDTH * this.layout.cellSize / 2;
+    const centerY = this.layout.gridY + BOARD_HEIGHT * this.layout.cellSize * 0.42;
+    this.cameras.main.flash(250, 255, 239, 197);
+    this.cameras.main.shake(170, 0.0022);
+
+    this.victoryParticles = this.add.particles(centerX, centerY, WIN_PARTICLE_TEXTURE_KEY, {
+      angle: { min: 210, max: 330 },
+      alpha: { start: 1, end: 0 },
+      color: [0xffdc82, 0xfff1c9, 0xc9563d, 0x7d9a68],
+      emitting: false,
+      gravityY: 230,
+      lifespan: { min: 720, max: 1120 },
+      quantity: 38,
+      rotate: { min: 0, max: 360 },
+      scale: { start: 0.9, end: 0.08 },
+      speed: { min: 105, max: 265 },
+    });
+    this.victoryParticles.explode(38);
+    this.input.once(Phaser.Input.Events.POINTER_DOWN, this.handleVictorySkip, this);
+    this.input.keyboard?.once(
+      Phaser.Input.Keyboard.Events.ANY_KEY_DOWN,
+      this.handleVictorySkip,
+      this,
+    );
+    this.victoryFinishTimer = this.time.delayedCall(1400, () => {
+      this.completeVictoryCelebration();
+    });
+  }
+
+  private completeVictoryCelebration(skipped = false): void {
+    if (this.victoryCelebrationCompleted) return;
+    this.victoryCelebrationCompleted = true;
+    this.cleanupVictoryCelebration();
+
+    if (skipped) {
+      this.cameras.main.resetFX();
+      const target = this.pieceViews.get(this.options.level.targetPieceId);
+      if (target) this.tweens.killTweensOf(target.container);
+      this.placeWonTargetAtExit();
+    }
+
+    this.options.onVictoryCelebrationComplete?.();
+  }
+
+  private cleanupVictoryCelebration(): void {
+    this.victoryFinishTimer?.remove(false);
+    this.victoryFinishTimer = null;
+    this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handleVictorySkip, this);
+    this.input.keyboard?.off(
+      Phaser.Input.Keyboard.Events.ANY_KEY_DOWN,
+      this.handleVictorySkip,
+      this,
+    );
+    this.victoryParticles?.destroy();
+    this.victoryParticles = null;
   }
 
   private prefersReducedMotion(): boolean {
@@ -535,18 +639,38 @@ export class PuzzleScene extends Phaser.Scene {
 
     const graphics = this.boardGraphics;
     graphics.clear();
-    graphics.fillStyle(0x6f5237, 0.1);
+    graphics.fillStyle(0x342419, 0.2);
     graphics.fillRoundedRect(frameX + 5, frameY + 8, frameWidth, frameHeight, 19);
-    graphics.fillStyle(0xb78b5c, 1);
+    graphics.fillStyle(0x4f3827, 1);
     graphics.fillRoundedRect(frameX, frameY, frameWidth, frameHeight, 18);
-    graphics.fillStyle(0x8b6542, 0.32);
-    graphics.fillRoundedRect(frameX + 4, frameY + 4, frameWidth - 8, frameHeight - 8, 14);
-    graphics.fillStyle(0xf0e5cf, 1);
+    graphics.lineStyle(1.2, 0xe0bd78, 0.66);
+    graphics.strokeRoundedRect(frameX + 1, frameY + 1, frameWidth - 2, frameHeight - 2, 17);
+    graphics.fillStyle(0x896844, 1);
+    graphics.fillRoundedRect(frameX + 3, frameY + 3, frameWidth - 6, frameHeight - 6, 15);
+    graphics.fillStyle(0x513a29, 1);
+    graphics.fillRoundedRect(frameX + 6, frameY + 6, frameWidth - 12, frameHeight - 12, 11);
+
+    graphics.lineStyle(1, 0x342419, 0.22);
+    for (let grain = 0; grain < 3; grain += 1) {
+      const inset = 3 + grain * 2.6;
+      graphics.lineBetween(frameX + FRAME_SIZE * 0.6, frameY + inset, frameX + frameWidth - FRAME_SIZE * 0.6, frameY + inset);
+      graphics.lineBetween(frameX + FRAME_SIZE * 0.6, frameY + frameHeight - inset, frameX + frameWidth - FRAME_SIZE * 0.6, frameY + frameHeight - inset);
+      graphics.lineBetween(frameX + inset, frameY + FRAME_SIZE * 0.6, frameX + inset, frameY + frameHeight - FRAME_SIZE * 0.6);
+      graphics.lineBetween(frameX + frameWidth - inset, frameY + FRAME_SIZE * 0.6, frameX + frameWidth - inset, frameY + frameHeight - FRAME_SIZE * 0.6);
+    }
+    graphics.fillStyle(0xe2c27f, 0.78);
+    for (const x of [frameX + 6, frameX + frameWidth - 6]) {
+      for (const y of [frameY + 6, frameY + frameHeight - 6]) {
+        graphics.fillCircle(x, y, 1.5);
+      }
+    }
+
+    graphics.fillStyle(0xeee4d1, 1);
     graphics.fillRoundedRect(gridX, gridY, boardWidth, boardHeight, 7);
 
     for (let row = 0; row < BOARD_HEIGHT; row += 1) {
       for (let column = 0; column < BOARD_WIDTH; column += 1) {
-        const tint = (row + column) % 2 === 0 ? 0xf6eedf : 0xeee3d0;
+        const tint = (row + column) % 2 === 0 ? 0xf1e8d7 : 0xe7dbc3;
         graphics.fillStyle(tint, 1);
         graphics.fillRect(
           gridX + column * cellSize + 1,
@@ -557,7 +681,7 @@ export class PuzzleScene extends Phaser.Scene {
       }
     }
 
-    graphics.lineStyle(1, 0xcbb99a, 0.72);
+    graphics.lineStyle(1, 0xb6a27d, 0.74);
     for (let column = 1; column < BOARD_WIDTH; column += 1) {
       const x = gridX + column * cellSize;
       graphics.lineBetween(x, gridY + 1, x, gridY + boardHeight - 1);
@@ -569,16 +693,16 @@ export class PuzzleScene extends Phaser.Scene {
 
     const exitX = gridX + cellSize;
     const exitWidth = cellSize * 2;
-    graphics.fillStyle(0xf4f0e8, 1);
+    graphics.fillStyle(0xefe9dc, 1);
     graphics.fillRect(exitX + 2, gridY + boardHeight - 2, exitWidth - 4, FRAME_SIZE + 7);
-    graphics.lineStyle(2, 0xb74334, 0.75);
+    graphics.lineStyle(2, 0xa83d32, 0.9);
     graphics.lineBetween(
       exitX + cellSize * 0.42,
       gridY + boardHeight + FRAME_SIZE + 2,
       exitX + exitWidth - cellSize * 0.42,
       gridY + boardHeight + FRAME_SIZE + 2,
     );
-    graphics.fillStyle(0xb74334, 0.9);
+    graphics.fillStyle(0xa83d32, 1);
     graphics.fillTriangle(
       width / 2,
       gridY + boardHeight + FRAME_SIZE + 10,
@@ -628,6 +752,8 @@ export class PuzzleScene extends Phaser.Scene {
     this.game.canvas.removeEventListener("pointerdown", this.capturePointer);
     this.game.canvas.removeEventListener("pointercancel", this.handlePointerCancel);
     this.game.canvas.removeEventListener("touchcancel", this.handlePointerCancel);
+    this.cameras.main.resetFX();
+    this.cleanupVictoryCelebration();
     this.unsubscribeStore?.();
     this.unsubscribeStore = null;
   }

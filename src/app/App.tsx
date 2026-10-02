@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { saveLocalePreference } from "../i18n/languagePreference";
@@ -64,12 +64,20 @@ export function App() {
   const [gameSnapshot, setGameSnapshot] = useState<GameSnapshot | null>(null);
   const [winRecord, setWinRecord] = useState<CompletionRecord | null>(null);
   const [winRecordSaved, setWinRecordSaved] = useState(false);
+  const [victoryCelebrationComplete, setVictoryCelebrationComplete] = useState(false);
+  const [newlyUnlockedDifficulty, setNewlyUnlockedDifficulty] = useState<
+    Level["difficulty"] | null
+  >(null);
   const [historyLevelId, setHistoryLevelId] = useState<number | null>(null);
   const [selectedReplay, setSelectedReplay] = useState<CompletionRecord | null>(null);
   const [replayReturn, setReplayReturn] = useState<ReplayReturn>("history");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const runTimer = useRef<RunTimer | null>(null);
   const { t } = useTranslation();
+  const handleVictoryCelebrationComplete = useCallback(
+    () => setVictoryCelebrationComplete(true),
+    [],
+  );
   const activeLocale: AppLocale = isAppLocale(i18n.resolvedLanguage) ? i18n.resolvedLanguage : "zh-CN";
   const pieceTheme = progress?.settings.pieceTheme ?? "text";
   const pieceLabels = TRANSLATIONS[activeLocale].game.pieces;
@@ -157,11 +165,28 @@ export function App() {
       const snapshot = gameStore.getSnapshot();
       setGameSnapshot(snapshot);
       if (snapshot.status === "won" && previousStatus !== "won") {
+        setVictoryCelebrationComplete(false);
+        const completedBeforeWin = Object.keys(progressStore.getSnapshot().bestStars).map(Number);
+        const nextDifficulty = activeLevel.difficulty < 6
+          ? (activeLevel.difficulty + 1) as Level["difficulty"]
+          : null;
+        const nextDifficultyWasUnlocked = nextDifficulty !== null &&
+          getDifficultyUnlockStatus(levels, completedBeforeWin, nextDifficulty).isUnlocked;
         const elapsedMs = pauseElapsedTimer(activeLevel.id);
         const result = progressStore.recordWin(snapshot, activeLevel, elapsedMs);
+        const completedAfterWin = Object.keys(progressStore.getSnapshot().bestStars).map(Number);
+        const nextDifficultyIsUnlocked = nextDifficulty !== null &&
+          getDifficultyUnlockStatus(levels, completedAfterWin, nextDifficulty).isUnlocked;
+        setNewlyUnlockedDifficulty(
+          nextDifficulty !== null && !nextDifficultyWasUnlocked && nextDifficultyIsUnlocked
+            ? nextDifficulty
+            : null,
+        );
         setWinRecord(result.record);
         setWinRecordSaved(result.saved);
       } else if (snapshot.status === "playing") {
+        setVictoryCelebrationComplete(false);
+        setNewlyUnlockedDifficulty(null);
         progressStore.saveGame(snapshot, getElapsedMs(activeLevel.id));
       }
       previousStatus = snapshot.status;
@@ -169,7 +194,7 @@ export function App() {
 
     setGameSnapshot(gameStore.getSnapshot());
     return gameStore.subscribe(syncGame);
-  }, [gameStore, activeLevel, progressStore]);
+  }, [gameStore, activeLevel, levels, progressStore]);
 
   useEffect(() => {
     if (!gameStore || !activeLevel || !progressStore) return undefined;
@@ -404,6 +429,8 @@ export function App() {
         <HomeScreen
           ready={progressStore !== null}
           hasUnfinishedGame={Boolean(progress && Object.keys(progress.gamesByLevel).length > 0)}
+          heroLevel={levelsById.get(272) ?? null}
+          pieceLabels={pieceLabels}
           onBrowseLevels={() => setScreen("levels")}
           onContinue={continueGame}
         />
@@ -461,6 +488,7 @@ export function App() {
                 level={activeLevel}
                 pieceLabels={pieceLabels}
                 pieceTheme={pieceTheme}
+                onVictoryCelebrationComplete={handleVictoryCelebrationComplete}
                 store={gameStore}
               />
             </Suspense>
@@ -473,10 +501,11 @@ export function App() {
             <span aria-hidden="true" className="note-symbol">{t("game.noteSymbol")}</span>
             <p>{t("game.note")}</p>
           </div>
-          {gameSnapshot.status === "won" && winRecord && (
+          {gameSnapshot.status === "won" && winRecord && victoryCelebrationComplete && (
             <WinDialog
               hasNextLevel={nextUnlockedLevel !== null}
               levelName={activeLevel.names[activeLocale]}
+              newlyUnlockedDifficulty={newlyUnlockedDifficulty}
               onBackToLevels={() => navigateTo("levels")}
               onNextLevel={() => nextUnlockedLevel && openLevel(nextUnlockedLevel.id)}
               onPlayAgain={playCurrentLevelAgain}

@@ -9,17 +9,19 @@ import {
 } from "../../appearance/pieceTheme";
 
 const PALETTES = {
-  target: { fill: 0x963f37, edge: 0xe2c27f, text: "#fff4dc", shadow: 0x4a2824 },
-  general: { fill: 0xd8ddd3, edge: 0x657568, text: "#354238", shadow: 0x4c5148 },
-  soldier: { fill: 0xe7ddcb, edge: 0x9c8667, text: "#584a39", shadow: 0x675a4a },
+  target: { fill: 0x96382f, edge: 0xe2c27f, text: "#fff4dc", shadow: 0x4a2824 },
+  general: { fill: 0x9aa99b, edge: 0x506657, text: "#29392f", shadow: 0x36483b },
+  soldier: { fill: 0xe9dfca, edge: 0x927a59, text: "#51432f", shadow: 0x675a4a },
 } as const;
 
 export class PieceView {
+  private readonly scene: Phaser.Scene;
   readonly container: Phaser.GameObjects.Container;
+  private readonly liftShadow: Phaser.GameObjects.Graphics;
+  private readonly settleGlow: Phaser.GameObjects.Graphics;
   private readonly art: Phaser.GameObjects.Graphics;
   private readonly themeImage: Phaser.GameObjects.Image;
   private readonly ornament: Phaser.GameObjects.Graphics;
-  private readonly selection: Phaser.GameObjects.Graphics;
   private readonly hintGraphics: Phaser.GameObjects.Graphics;
   private readonly label: Phaser.GameObjects.Text;
   private cellSize = 0;
@@ -36,9 +38,14 @@ export class PieceView {
     label: string,
     pieceTheme: PieceTheme,
   ) {
+    this.scene = scene;
     this.labelText = label;
     this.pieceTheme = pieceTheme;
     this.container = scene.add.container(0, 0);
+    this.liftShadow = scene.add.graphics();
+    this.liftShadow.setVisible(false);
+    this.settleGlow = scene.add.graphics();
+    this.settleGlow.setVisible(false);
     this.art = scene.add.graphics();
     const imageTexture = pieceTheme === "text"
       ? "__MISSING"
@@ -50,7 +57,6 @@ export class PieceView {
     );
     this.ornament = scene.add.graphics();
     this.hintGraphics = scene.add.graphics();
-    this.selection = scene.add.graphics();
     this.label = scene.add.text(0, 0, label, {
       align: "center",
       color: PALETTES.soldier.text,
@@ -60,11 +66,12 @@ export class PieceView {
       resolution: 2,
     }).setOrigin(0.5);
     this.container.add([
+      this.liftShadow,
+      this.settleGlow,
       this.art,
       this.themeImage,
       this.ornament,
       this.hintGraphics,
-      this.selection,
       this.label,
     ]);
     this.container.setData("pieceId", piece.id);
@@ -84,7 +91,7 @@ export class PieceView {
     this.drawArt();
     this.layoutLabel();
     this.applyPieceTheme();
-    this.drawSelection();
+    this.drawLiftShadow();
     this.drawHints();
   }
 
@@ -110,10 +117,57 @@ export class PieceView {
   }
 
   setSelection(selected: boolean, directions: ReadonlySet<Direction> = new Set()): void {
+    const selectionChanged = this.selected !== selected;
     this.selected = selected;
     this.directions = new Set(directions);
-    this.drawSelection();
+    this.drawLiftShadow();
     this.drawHints();
+
+    if (!selectionChanged) return;
+
+    this.scene.tweens.killTweensOf(this.container);
+    const selectedScale = selected ? 1.055 : 1;
+    if (this.prefersReducedMotion()) {
+      this.container.setScale(selectedScale);
+      return;
+    }
+    this.scene.tweens.add({
+      targets: this.container,
+      scaleX: selectedScale,
+      scaleY: selectedScale,
+      duration: selected ? 155 : 135,
+      ease: selected ? "Back.Out" : "Sine.Out",
+    });
+  }
+
+  flashLanding(): void {
+    const inset = Math.max(2, this.cellSize * 0.025);
+    this.settleGlow.clear();
+    this.settleGlow.fillStyle(0xd5b46f, 0.1);
+    this.settleGlow.fillRoundedRect(
+      -this.viewWidth / 2 - inset,
+      -this.viewHeight / 2 - inset,
+      this.viewWidth + inset * 2,
+      this.viewHeight + inset * 2,
+      Math.min(this.cellSize * 0.2, 16),
+    );
+    this.settleGlow.lineStyle(Math.max(1.5, this.cellSize * 0.018), 0xe9c779, 0.86);
+    this.settleGlow.strokeRoundedRect(
+      -this.viewWidth / 2 - inset,
+      -this.viewHeight / 2 - inset,
+      this.viewWidth + inset * 2,
+      this.viewHeight + inset * 2,
+      Math.min(this.cellSize * 0.2, 16),
+    );
+    this.scene.tweens.killTweensOf(this.settleGlow);
+    this.settleGlow.setAlpha(0.78).setVisible(true);
+    this.scene.tweens.add({
+      targets: this.settleGlow,
+      alpha: 0,
+      duration: 360,
+      ease: "Cubic.Out",
+      onComplete: () => this.settleGlow.setVisible(false),
+    });
   }
 
   setInputEnabled(enabled: boolean): void {
@@ -151,6 +205,8 @@ export class PieceView {
     this.art.fillRoundedRect(left + 1, top + 1, width - 2, height - 5, radius);
     this.art.lineStyle(1.5, palette.edge, 0.9);
     this.art.strokeRoundedRect(left + inset, top + inset, width - inset * 2, height - inset * 2 - 3, radius * 0.72);
+    this.art.lineStyle(1, 0xfff4dc, 0.24);
+    this.art.lineBetween(left + inset + 5, top + inset + 2, left + width - inset - 5, top + inset + 2);
 
     this.ornament.clear();
     if (this.piece.roleId === "cao-cao") {
@@ -204,19 +260,33 @@ export class PieceView {
     this.label.setScale(Math.max(0.72, fitScale));
   }
 
-  private drawSelection(): void {
-    this.selection.clear();
+  private drawLiftShadow(): void {
+    this.liftShadow.clear();
+    this.liftShadow.setVisible(this.selected);
     if (!this.selected) return;
 
-    const inset = Math.max(4, this.cellSize * 0.045);
-    this.selection.lineStyle(Math.max(2, this.cellSize * 0.035), 0xffd78a, 0.98);
-    this.selection.strokeRoundedRect(
-      -this.viewWidth / 2 + inset,
-      -this.viewHeight / 2 + inset,
-      this.viewWidth - inset * 2,
-      this.viewHeight - inset * 2 - 2,
-      Math.min(this.cellSize * 0.13, 12),
-    );
+    const spread = this.cellSize * 0.055;
+    const shadowY = this.viewHeight / 2 + this.cellSize * 0.055;
+    const layers = [
+      { width: 1.14, height: 0.34, alpha: 0.018 },
+      { width: 1.04, height: 0.27, alpha: 0.022 },
+      { width: 0.94, height: 0.2, alpha: 0.028 },
+      { width: 0.84, height: 0.14, alpha: 0.036 },
+    ];
+    for (const layer of layers) {
+      this.liftShadow.fillStyle(0x30271e, layer.alpha);
+      this.liftShadow.fillEllipse(
+        0,
+        shadowY,
+        this.viewWidth * layer.width + spread,
+        this.cellSize * layer.height + spread,
+      );
+    }
+  }
+
+  private prefersReducedMotion(): boolean {
+    return typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
   }
 
   private drawHints(): void {
@@ -235,7 +305,7 @@ export class PieceView {
 
     for (const direction of this.directions) {
       const point = points[direction];
-      this.hintGraphics.fillStyle(0x795d38, 0.94);
+      this.hintGraphics.fillStyle(0x62472b, 0.97);
       this.hintGraphics.fillCircle(point.x, point.y, radius);
       this.hintGraphics.fillStyle(0xffe5ae, 1);
       const tipX = point.x + Math.cos(point.angle) * arrowSize * 0.8;
